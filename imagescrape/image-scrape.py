@@ -1,58 +1,38 @@
-import bs4
-import requests
-import re
-import urllib.request
-import urllib.error
 import os
-import argparse
-import sys
+import urllib
 import json
+from bs4 import BeautifulSoup
 
-def get_soup(url, header):
-    return bs4.BeautifulSoup(urllib.request.urlopen(urllib.request.Request(url, headers=header)), 'html.parser')
-
-def main(args):
-    parser = argparse.ArgumentParser(description='Options for scraping Google images')
-    parser.add_argument('-s', '--search', default='banana',type=str, help='search term')
-    parser.add_argument('-n', '--num_images', default=10,type=int, help='num of images to scrape')
-    #parser.add_argument('-o', '--directory', default='<DEFAULT_SAVE_DIRECTORY>', type=str, help='output directory')
-    args = parser.parse_args()
-
-    # 複数のキーワードを"+"で繋げる
-    query = args.search.split()
-    query = '+'.join(query)
-    max_images = args.num_images
-
-    # 画像をフォルダーでグループする
-    save_directory = args.directory + '/' + query
-    if not os.path.exists(save_directory):
-        os.makedirs(save_directory)
-
-    # スクレイピング
-    url = "https://www.google.co.jp/search?q="+query+"&source=lnms&tbm=isch"
-    header = {'User-Agent': 'Mozilla/5.0'}
-    soup = get_soup(url, header)
-    ActualImages = []
-
-    for a in soup.find_all("div", {"class": "rg_meta"}):
-        link, Type = json.loads(a.text)["ou"], json.loads(a.text)["ity"]
-        ActualImages.append((link, Type))
-    for i, (img, Type) in enumerate(ActualImages[0:max_images]):
-        try:
-            Type = Type if len(Type) > 0 else 'jpg'
-            print("Downloading image {} ({}), type is {}".format(i, img, Type))
-            raw_img = urllib.request.urlopen(img).read()
-            f = open(os.path.join(save_directory, "img_"+str(i)+"."+Type), 'wb')
-            f.write(raw_img)
-            f.close()
-        except Exception as e:
-            print("could not load : "+img)
-            print(e)
+def search(keyword,maximum):
+    if not os.path.exists(keyword):
+        os.mkdir(keyword)
+    urlKeyword = urllib.parse.quote(keyword)    #url用に
+    url = 'https://www.google.com/search?hl=jp&q=' + urlKeyword + '&btnG=Google+Search&tbs=0&safe=off&tbm=isch'
+    headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:47.0) Gecko/20100101 Firefox/47.0",}  #偽装
+    request = urllib.request.Request(url=url, headers=headers) 
+    page = urllib.request.urlopen(request)  #おーぷん
+    html = page.read().decode("utf8")  #判定をもとにデコード
+    html = BeautifulSoup(html, "html.parser")
+    elems = html.select('.rg_meta.notranslate')
+    jsons = [json.loads(e.get_text()) for e in elems]
+    imageURLs = [js['ou'] for js in jsons]  #一度に100件までしか持ってこれないっぽい
+    result = []
+    count = 0
+    print(imageURLs)
+    """
+    while len(imageURLs):
+        if not len(imageURLs):
+            print('-> no more images')
+            break
+        elif len(imageURLs) > maximum - count:
+            result += imageURLs[:maximum - count]
+            break
+        else:
+            result += imageURLs
+            count += len(imageURLs)
+    """
 
 if __name__ == '__main__':
-    from sys import argv
-    try:
-        main(argv)
-    except KeyboardInterrupt:
-        pass
-    sys.exit()
+    keyword = "あ"#input("画像検索：")
+    maximum = 1#int(input("何枚？"))
+    search(keyword,maximum)
