@@ -94,6 +94,16 @@ class Google:
             with open(filename, 'wb') as f:
                 f.write(content)
 
+def kakasi(words):
+    import pykakasi #全角を半角ローマ字に変換
+    kakasi = pykakasi.kakasi()
+    kakasi.setMode('H', 'a')
+    kakasi.setMode('K', 'a')
+    kakasi.setMode('J', 'a')
+    conv = kakasi.getConverter()
+
+    return conv.do(words)
+
 google = Google()
 word = input("検索する単語：")
 maximum = int(input("何件取ってくる？："))
@@ -106,5 +116,5 @@ else:
 #result = google.Search(word, type='text', maximum=200)
 # 画像検索
 url_list = google.Search(word, type = typeselect, maximum = maximum)
-result = google.save_images(url_list, basename = word + "-" + typeselect)
+result = google.save_images(url_list, basename = kakasi(word) + "-" + typeselect)
 print("にゃーん")

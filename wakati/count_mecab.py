@@ -111,7 +111,7 @@ def plot(countedwords):
             break
     plt.figure(figsize=(15, 5)) #これでラベルがかぶらないくらい大きく
     plt.title('頻繁に発言したワードベスト'+str(show), size=16)
-    plt.bar(range(len(counts)), counts.values(), align='center')
+    plt.bar(range(len(counts)), max(counts.values()), align='center')
     plt.xticks(range(len(counts)), list(counts.keys()))
     # 棒グラフ内に数値を書く
     for x, y in zip(range(len(counts)), counts.values()):
@@ -122,7 +122,7 @@ def plot(countedwords):
     plt.show()
 
 if __name__ == '__main__':
-    c = count("abe/abe_04-now.txt")
+    c = count("abe_file/abe_04-now.txt")
     #with open("tmp_wakati2.txt", "w") as f:
     #    f.write(str(wakati))
     plot(c)
