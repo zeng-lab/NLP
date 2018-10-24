@@ -1,6 +1,5 @@
 import MeCab
 import re
-#import collections #counterを使うため
 import codecs   #unicodeError対策
 import time
 
@@ -41,35 +40,40 @@ def owakati(all_words):
             s = e
             e += 200000
     return wakatifile
-    
-def count(filepass):
-    global s, e, stops
+
+def counting(all_words):
     dicts = {}  # 単語をカウントする辞書
-    all_words = re_def(filepass)  #無駄な記号とかを取り除く
-    print("無駄排除終了")
-    l = len(all_words)
-    print("総文字数:" , l)
-    if l > 2000000:
-        while l / 1000:
-            word_list = []
-            wakati = owakati(all_words) #分かち書きアンド形態素解析
-            for addlist in wakati:
-                addlist = re.split('[\t,]', addlist)  # 空白と","で分割
-                if addlist[0] == 'EOS' or addlist[0] == '' or addlist[0] == 'ー':
+    mem = 0 #一定単語以上か判別
+    re_hiragana = re.compile(r'[あ-んア-ン一-鿐].')    #ひらがな2文字以上にヒットする正規表現
+    if len(all_words) > 2000000:
+        mem = 1
+    while True:
+        word_list = []
+        wakati = owakati(all_words) #分かち書きアンド形態素解析
+        for addlist in wakati:
+            addlist = re.split('[\t,]', addlist)  # 空白と","で分割
+            if addlist[0] == 'EOS' or addlist[0] == '' or addlist[0] == 'ー':
+                pass
+            #elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '名詞' and addlist[2] == '固有名詞' and addlist[2] == '一般':  # 単語リストに追加
+            elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '動詞' and addlist[2] == '自立' or addlist[1] == '形容詞' and addlist[2] == '自立' or addlist[1] == '副詞' and addlist[2] == '一般':  # 単語リストに追加
+                #word_list.extend(addlist)
+                if not re_hiragana.match(addlist[0]):   #一文字のみを省く
                     pass
-                elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '名詞' and addlist[2] == '固有名詞' and addlist[2] == '一般':  # 単語リストに追加
-                    #word_list.extend(addlist)
-                    word_list.append(addlist)
-            for count in word_list:
-                if count[0] not in dicts:
-                    dicts.setdefault(count[0], 1)
                 else:
-                    dicts[count[0]] += 1
+                    del addlist[:7] #発言の単語ではなくその意味だけに丸める
+                    #print(addlist)
+                    word_list.append(addlist)
+        for count in word_list:
+            if count[0] not in dicts:
+                dicts.setdefault(count[0], 1)
+            else:
+                dicts[count[0]] += 1
+        if mem:
             #メモリ解放
             for n, c in dicts.items():
                 if c < 100:
                     del n, c
-            if l < stops:
+            if len(all_words) < stops:
                 del wakati,addlist,word_list
                 break
             else:
@@ -77,30 +81,26 @@ def count(filepass):
                 stops += 2000000
                 s = e
                 e += 200000
-        return dicts
-    else:
-        word_list = []
-        wakati = owakati(all_words)
-        for addlist in wakati:
-            addlist = re.split('[\t,]', addlist)  # 空白と","で分割
-            if addlist[0] == 'EOS' or addlist[0] == '' or addlist[0] == 'ー':
-                pass
-            elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '名詞' and addlist[2] == '固有名詞' and addlist[2] == '一般':  # 単語リストに追加
-                #word_list.extend(addlist)
-                word_list.append(addlist)
-        for count in word_list:
-            if count[0] not in dicts:
-                dicts.setdefault(count[0], 1)
-            else:
-                dicts[count[0]] += 1
-        return dicts
+        else:
+            break
+    return dicts
+
+def count(filepass):
+    global s, e, stops
+    dicts = {}  # 単語をカウントする辞書
+    all_words = re_def(filepass)  #無駄な記号とかを取り除く
+    print("無駄排除終了")
+    l = len(all_words)
+    print("総文字数:" , l)
+    dicts = counting(all_words)
+    return dicts
 
 def plot(countedwords):
     #import numpy as np
     import matplotlib.pyplot as plt
     counts = {}
     c = 1
-    show = 30 #何件表示する？
+    show = 20 #何件表示する？
     for k, v in sorted(countedwords.items(), key=lambda x: x[1], reverse=True):  # 辞書を降順に入れる
         #d = {str(k): int(v)}
         counts.update( {str(k):int(v)} )
