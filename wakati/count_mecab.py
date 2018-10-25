@@ -41,7 +41,10 @@ def owakati(all_words):
             e += 200000
     return wakatifile
 
-def counting(all_words):
+def counting(filepass):
+    all_words = re_def(filepass)
+    print("無駄排除終了")
+    print("総文字数:" ,len(all_words))
     dicts = {}  # 単語をカウントする辞書
     mem = 0 #一定単語以上か判別
     re_hiragana = re.compile(r'[あ-んア-ン一-鿐].')    #ひらがな2文字以上にヒットする正規表現
@@ -85,16 +88,6 @@ def counting(all_words):
             break
     return dicts
 
-def count(filepass):
-    global s, e, stops
-    dicts = {}  # 単語をカウントする辞書
-    all_words = re_def(filepass)  #無駄な記号とかを取り除く
-    print("無駄排除終了")
-    l = len(all_words)
-    print("総文字数:" , l)
-    dicts = counting(all_words)
-    return dicts
-
 def plot(countedwords):
     #import numpy as np
     import matplotlib.pyplot as plt
@@ -123,7 +116,7 @@ def plot(countedwords):
 
 if __name__ == '__main__':
     stime = time.time()
-    c = count("abe_file/abe_04-now.txt")
+    c = counting("abe_file/abe_04-now.txt")
     etime = time.time() - stime
     print("解析処理時間",etime)
     #with open("tmp_wakati2.txt", "w") as f:
