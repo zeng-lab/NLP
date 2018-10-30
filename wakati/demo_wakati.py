@@ -8,11 +8,11 @@ def main():
     keitai = n.parse(a).strip()
     print(type(wakati),wakati)
     print(keitai)
-    for addlist in keitai:
-        addlist = re.split('[\t,]', addlist)  # 空白と","で分割
-        if addlist[0] == 'EOS' or addlist[0] == '' or addlist[0] == 'ー':
-            pass
-        print(addlist[0])
+#    for addlist in keitai:
+#        addlist = re.split('[\t,]', addlist)  # 空白と","で分割
+#        if addlist[0] == 'EOS' or addlist[0] == '' or addlist[0] == 'ー':
+#            pass
+#        print(addlist[0],end = "\n")
 if __name__ == '__main__':
     i = 1
     while i > 0:

@@ -62,7 +62,8 @@ class Mecab:
                 if addlist[0] == 'EOS' or addlist[0] == '' or addlist[0] == 'ー':
                     pass
                 #elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '名詞' and addlist[2] == '固有名詞' and addlist[2] == '一般':  # 単語リストに追加
-                elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '動詞' and addlist[2] == '自立' or addlist[1] == '形容詞' and addlist[2] == '自立' or addlist[1] == '副詞' and addlist[2] == '一般':  # 単語リストに追加
+                #elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '動詞' and addlist[2] == '自立' or addlist[1] == '形容詞' and addlist[2] == '自立' or addlist[1] == '副詞' and addlist[2] == '一般':  # 単語リストに追加
+                elif addlist[1] == '名詞' and addlist[2] == '一般' :  # 単語リストに追加
                     #word_list.extend(addlist)
                     if not re_hiragana.match(addlist[0]):   #一文字のみを省く
                         pass
