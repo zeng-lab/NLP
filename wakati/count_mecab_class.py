@@ -1,7 +1,9 @@
 import MeCab
 import re
+import urllib3
 import codecs   #unicodeError対策
 import time
+from bs4 import BeautifulSoup
 
 class Mecab:
     def __init__(self):
@@ -33,6 +35,32 @@ class Mecab:
         print("無駄処理時間",end_time)
         return l
 
+    def sloth_words(self):    #slothwordのlist化
+        ###sloth_words###
+        sloth = 'http://svn.sourceforge.jp/svnroot/slothlib/CSharp/Version1/SlothLib/NLP/Filter/StopWord/word/Japanese.txt'
+        http = urllib3.PoolManager() #urlib3系のおまじない
+        slothl_file = http.request('GET', sloth)
+        soup = BeautifulSoup(slothl_file.data, 'lxml')
+        soup = str(soup).split()  # soupは文字列じゃないので注意
+        soup.pop(0) #htmlタグを殲滅せよ
+        soup.pop()                      
+        #SlothLibに存在しないストップワードを自分で追加↓
+        mydict = ['安倍','君','先','いわば']
+        soup.extend(mydict)
+
+        ###sloth_singleword###
+        sloth_1 = 'http://svn.sourceforge.jp/svnroot/slothlib/CSharp/Version1/SlothLib/NLP/Filter/StopWord/word/OneLetterJp.txt'
+        http2 = urllib3.PoolManager()  # urlib3系のおまじない
+        slothl_file2 = http.request('GET', sloth_1)
+        soup2 = BeautifulSoup(slothl_file2.data, 'lxml')
+        soup2 = str(soup2).split()  # soupは文字列じゃないので注意
+        soup2.pop(0)  # htmlタグを殲滅せよ
+        soup2.pop()
+
+        soup.extend(soup2)  #1つにまとめる
+
+        return soup
+
     def owakati(self,all_words):
         wakatifile = []
         while len(all_words):
@@ -52,6 +80,7 @@ class Mecab:
         print("総文字数:" , l)
         mem = 0 #一定単語以上か判別
         re_hiragana = re.compile(r'[あ-んア-ン一-鿐].')    #ひらがな2文字以上にヒットする正規表現
+        sloths = self.sloth_words() #slothのlist
         if len(all_words) > 2000000:
             mem = 1
         while True:
@@ -59,18 +88,18 @@ class Mecab:
             wakati = self.owakati(all_words) #分かち書きアンド形態素解析
             for addlist in wakati:
                 addlist = re.split('[\t,]', addlist)  # 空白と","で分割
+                for stopword in sloths:
+                    while stopword in addlist[0]:
+                        del addlist[0]
                 if addlist[0] == 'EOS' or addlist[0] == '' or addlist[0] == 'ー':
                     pass
-                #elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '名詞' and addlist[2] == '固有名詞' and addlist[2] == '一般':  # 単語リストに追加
-                #elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '動詞' and addlist[2] == '自立' or addlist[1] == '形容詞' and addlist[2] == '自立' or addlist[1] == '副詞' and addlist[2] == '一般':  # 単語リストに追加
-                elif addlist[1] == '名詞' and addlist[2] == '一般' :  # 単語リストに追加
-                    #word_list.extend(addlist)
-                    if not re_hiragana.match(addlist[0]):   #一文字のみを省く
-                        pass
-                    else:
-                        del addlist[:7] #発言の単語ではなくその意味だけに丸める
-                        #print(addlist)
-                        word_list.append(addlist)
+                #elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '動詞' and addlist[2] == '自立' or addlist[1] == '形容詞' and addlist[2] == '自立' or addlist[1] == '副詞' and addlist[2] == '一般':
+                elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '名詞' and addlist[2] == '固有名詞' and not addlist[3] == '人名':
+                    #print(addlist)  #6番目に未然形とか連用タ接続
+                    #del addlist[:7] #発言の単語ではなくその意味だけに丸める
+                    word_list.append(addlist)
+                else:
+                    pass
             for count in word_list:
                 if count[0] not in dicts:
                     dicts.setdefault(count[0], 1)
