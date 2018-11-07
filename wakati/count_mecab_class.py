@@ -20,6 +20,7 @@ class Mecab:
             re_full = re.compile(r'[︰-＠]')  # 全角記号
             re_full2 = re.compile(r'[、。・’〜：＜＞＿｜「」｛｝【】『』〈〉“”○〔〕…――――◇]')  # 全角で取り除けなかったやつ
             re_url = re.compile(r'https?://[\w/:%#\$&\?\(\)~\.=\+\-…]+')
+            re_tag = re.compile(r"<[^>]*?>")    #HTMLタグ
             re_n = re.compile(r'\n')  # 改行文字
             re_space = re.compile(r'[\s+]')  #１以上の空白文字
             start_time = time.time()
@@ -30,6 +31,7 @@ class Mecab:
                 line = re_url.sub("", line)
                 line = re_space.sub("", line)
                 line = re_n.sub("", line)
+                line = re_tag.sub("",line)
                 l += line
         end_time = time.time() - start_time
         print("無駄処理時間",end_time)
@@ -58,7 +60,6 @@ class Mecab:
         soup2.pop()
 
         soup.extend(soup2)  #1つにまとめる
-
         return soup
 
     def owakati(self,all_words):
@@ -91,7 +92,7 @@ class Mecab:
                 for stopword in sloths:
                     while stopword in addlist[0]:
                         del addlist[0]
-                if addlist[0] == 'EOS' or addlist[0] == '' or addlist[0] == 'ー':
+                if addlist[0] == 'EOS' or addlist[0] == '' or addlist[0] == 'ー' or addlist[0] == '*':
                     pass
                 #elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '動詞' and addlist[2] == '自立' or addlist[1] == '形容詞' and addlist[2] == '自立' or addlist[1] == '副詞' and addlist[2] == '一般':
                 elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '名詞' and addlist[2] == '固有名詞' and not addlist[3] == '人名':
