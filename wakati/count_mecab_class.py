@@ -89,7 +89,7 @@ class Mecab:
             wakati = self.owakati(all_words) #分かち書きアンド形態素解析
             for addlist in wakati:
                 addlist = re.split('[\t,]', addlist)  # 空白と","で分割
-                for stopword in sloths:
+                for stopword in sloths: #ストップワードを取り除く
                     while stopword in addlist[0]:
                         del addlist[0]
                 if addlist[0] == 'EOS' or addlist[0] == '' or addlist[0] == 'ー' or addlist[0] == '*':
@@ -115,7 +115,7 @@ class Mecab:
                     del wakati,addlist,word_list
                     break
                 else:
-                    print(e + "文字まで終了")
+                    print("文字数オーバーなので200万文字ごとに再帰ちう")
                     self.stops += 2000000
                     self.s = self.e
                     self.e += 200000
@@ -133,9 +133,10 @@ class Mecab:
             #d = {str(k): int(v)}
             counts.update( {str(k):int(v)} )
             c += 1
+            ###結果の出力###
             if c > show:
-                with open("result_wakati.txt", "w") as f:
-                    f.write(str(counts))
+            #    with open("result_wakati.txt", "w") as f:
+            #        f.write(str(counts))
                 break
         plt.figure(figsize=(15, 5)) #これでラベルがかぶらないくらい大きく
         plt.title('頻繁に発言したワードベスト'+str(show), size=16)
@@ -151,7 +152,7 @@ class Mecab:
 
 if __name__ == '__main__':
     mecab = Mecab()
-    words = mecab.re_def("abe_file/abe_04-now.txt")
+    words = mecab.re_def("abe_file/abe_honkaigi.txt")
     stime = time.time()
     c = mecab.counting(words)
     etime = time.time() - stime
