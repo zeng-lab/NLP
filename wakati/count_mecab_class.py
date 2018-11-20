@@ -1,7 +1,9 @@
 import MeCab
 import re
+import urllib3
 import codecs   #unicodeError対策
 import time
+from bs4 import BeautifulSoup
 
 class Mecab:
     def __init__(self):
@@ -9,6 +11,7 @@ class Mecab:
         self.e = 200000
         self.stops = 2000000
         self.tagger = MeCab.Tagger()
+        self.All = 0
 
     def re_def(self,filepass):
         with codecs.open(filepass, 'r', encoding='utf-8', errors='ignore')as f:
@@ -18,6 +21,7 @@ class Mecab:
             re_full = re.compile(r'[︰-＠]')  # 全角記号
             re_full2 = re.compile(r'[、。・’〜：＜＞＿｜「」｛｝【】『』〈〉“”○〔〕…――――◇]')  # 全角で取り除けなかったやつ
             re_url = re.compile(r'https?://[\w/:%#\$&\?\(\)~\.=\+\-…]+')
+            re_tag = re.compile(r"<[^>]*?>")    #HTMLタグ
             re_n = re.compile(r'\n')  # 改行文字
             re_space = re.compile(r'[\s+]')  #１以上の空白文字
             start_time = time.time()
@@ -28,10 +32,36 @@ class Mecab:
                 line = re_url.sub("", line)
                 line = re_space.sub("", line)
                 line = re_n.sub("", line)
+                line = re_tag.sub("",line)
                 l += line
         end_time = time.time() - start_time
         print("無駄処理時間",end_time)
         return l
+
+    def sloth_words(self):    #slothwordのlist化
+        ###sloth_words###
+        sloth = 'http://svn.sourceforge.jp/svnroot/slothlib/CSharp/Version1/SlothLib/NLP/Filter/StopWord/word/Japanese.txt'
+        http = urllib3.PoolManager() #urlib3系のおまじない
+        slothl_file = http.request('GET', sloth)
+        soup = BeautifulSoup(slothl_file.data, 'lxml')
+        soup = str(soup).split()  # soupは文字列じゃないので注意
+        soup.pop(0) #htmlタグを殲滅せよ
+        soup.pop()                      
+        #SlothLibに存在しないストップワードを自分で追加↓
+        mydict = ['安倍','君','先','いわば']
+        soup.extend(mydict)
+
+        ###sloth_singleword###
+        sloth_1 = 'http://svn.sourceforge.jp/svnroot/slothlib/CSharp/Version1/SlothLib/NLP/Filter/StopWord/word/OneLetterJp.txt'
+        http2 = urllib3.PoolManager()  # urlib3系のおまじない
+        slothl_file2 = http.request('GET', sloth_1)
+        soup2 = BeautifulSoup(slothl_file2.data, 'lxml')
+        soup2 = str(soup2).split()  # soupは文字列じゃないので注意
+        soup2.pop(0)  # htmlタグを殲滅せよ
+        soup2.pop()
+
+        soup.extend(soup2)  #1つにまとめる
+        return soup
 
     def owakati(self,all_words):
         wakatifile = []
@@ -50,8 +80,10 @@ class Mecab:
         dicts = {}  # 単語をカウントする辞書
         l = len(all_words)
         print("総文字数:" , l)
+        ALL = 0 #単語のカウント
         mem = 0 #一定単語以上か判別
         re_hiragana = re.compile(r'[あ-んア-ン一-鿐].')    #ひらがな2文字以上にヒットする正規表現
+        sloths = self.sloth_words() #slothのlist
         if len(all_words) > 2000000:
             mem = 1
         while True:
@@ -59,18 +91,20 @@ class Mecab:
             wakati = self.owakati(all_words) #分かち書きアンド形態素解析
             for addlist in wakati:
                 addlist = re.split('[\t,]', addlist)  # 空白と","で分割
-                if addlist[0] == 'EOS' or addlist[0] == '' or addlist[0] == 'ー':
+                for stopword in sloths: #ストップワードを取り除く
+                    while stopword in addlist[0]:
+                        del addlist[0]
+                if addlist[0] == 'EOS' or addlist[0] == '' or addlist[0] == 'ー' or addlist[0] == '*':
                     pass
-                #elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '名詞' and addlist[2] == '固有名詞' and addlist[2] == '一般':  # 単語リストに追加
-                #elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '動詞' and addlist[2] == '自立' or addlist[1] == '形容詞' and addlist[2] == '自立' or addlist[1] == '副詞' and addlist[2] == '一般':  # 単語リストに追加
-                elif addlist[1] == '名詞' and addlist[2] == '一般' :  # 単語リストに追加
-                    #word_list.extend(addlist)
-                    if not re_hiragana.match(addlist[0]):   #一文字のみを省く
-                        pass
-                    else:
-                        del addlist[:7] #発言の単語ではなくその意味だけに丸める
-                        #print(addlist)
-                        word_list.append(addlist)
+                #elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '動詞' and addlist[2] == '自立' or addlist[1] == '形容詞' and addlist[2] == '自立' or addlist[1] == '副詞' and addlist[2] == '一般':
+                elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '名詞' and addlist[2] == '固有名詞' and not addlist[3] == '人名':
+                    #print(addlist)  #6番目に未然形とか連用タ接続
+                    #del addlist[:7] #発言の単語ではなくその意味だけに丸める
+                    word_list.append(addlist)
+                    ALL += 1
+                else:
+                    pass
+                    #ALL += 1
             for count in word_list:
                 if count[0] not in dicts:
                     dicts.setdefault(count[0], 1)
@@ -85,12 +119,13 @@ class Mecab:
                     del wakati,addlist,word_list
                     break
                 else:
-                    print(e + "文字まで終了")
+                    print("文字数オーバーなので200万文字ごとに再帰ちう")
                     self.stops += 2000000
                     self.s = self.e
                     self.e += 200000
             else:
                 break
+        self.All = ALL
         return dicts
 
     def plot(self,countedwords):
@@ -100,20 +135,21 @@ class Mecab:
         c = 1
         show = 20 #何件表示する？
         for k, v in sorted(countedwords.items(), key=lambda x: x[1], reverse=True):  # 辞書を降順に入れる
-            #d = {str(k): int(v)}
             counts.update( {str(k):int(v)} )
             c += 1
             if c > show:
-                with open("result_wakati.txt", "w") as f:
-                    f.write(str(counts))
-                break
+            ###結果の出力###
+            #    with open("result_wakati.txt", "w") as f:
+            #        f.write(str(counts))
+               break
         plt.figure(figsize=(15, 5)) #これでラベルがかぶらないくらい大きく
-        plt.title('頻繁に発言したワードベスト'+str(show), size=16)
+        plt.title('頻繁に発言したワードベスト{0} 総単語数{1}'.format(show,self.All), size=16)
         plt.bar(range(len(counts)), list(counts.values()), align='center')
         plt.xticks(range(len(counts)), list(counts.keys()))
         # 棒グラフ内に数値を書く
         for x, y in zip(range(len(counts)), counts.values()):
-            plt.text(x, y, y, ha='center', va='bottom')
+            plt.text(x, y, y, ha='center', va='bottom') #出現回数
+            plt.text(x, y/2, "{0}%".format(round((y/self.All*100),2)),ha='center',va='bottom')  #パーセンテージ
         plt.tick_params(width=2, length=10) #ラベル大きさ 
         plt.tight_layout()  #整える
         #plt.tick_params(labelsize = 10)
@@ -121,7 +157,7 @@ class Mecab:
 
 if __name__ == '__main__':
     mecab = Mecab()
-    words = mecab.re_def("abe_file/abe_04-now.txt")
+    words = mecab.re_def("abe_file/abe_honkaigi.txt")
     stime = time.time()
     c = mecab.counting(words)
     etime = time.time() - stime
