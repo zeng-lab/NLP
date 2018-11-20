@@ -11,6 +11,7 @@ class Mecab:
         self.e = 200000
         self.stops = 2000000
         self.tagger = MeCab.Tagger()
+        self.All = 0
 
     def re_def(self,filepass):
         with codecs.open(filepass, 'r', encoding='utf-8', errors='ignore')as f:
@@ -79,6 +80,7 @@ class Mecab:
         dicts = {}  # 単語をカウントする辞書
         l = len(all_words)
         print("総文字数:" , l)
+        ALL = 0 #単語のカウント
         mem = 0 #一定単語以上か判別
         re_hiragana = re.compile(r'[あ-んア-ン一-鿐].')    #ひらがな2文字以上にヒットする正規表現
         sloths = self.sloth_words() #slothのlist
@@ -99,8 +101,10 @@ class Mecab:
                     #print(addlist)  #6番目に未然形とか連用タ接続
                     #del addlist[:7] #発言の単語ではなくその意味だけに丸める
                     word_list.append(addlist)
+                    ALL += 1
                 else:
                     pass
+                    #ALL += 1
             for count in word_list:
                 if count[0] not in dicts:
                     dicts.setdefault(count[0], 1)
@@ -121,6 +125,7 @@ class Mecab:
                     self.e += 200000
             else:
                 break
+        self.All = ALL
         return dicts
 
     def plot(self,countedwords):
@@ -130,21 +135,21 @@ class Mecab:
         c = 1
         show = 20 #何件表示する？
         for k, v in sorted(countedwords.items(), key=lambda x: x[1], reverse=True):  # 辞書を降順に入れる
-            #d = {str(k): int(v)}
             counts.update( {str(k):int(v)} )
             c += 1
-            ###結果の出力###
             if c > show:
+            ###結果の出力###
             #    with open("result_wakati.txt", "w") as f:
             #        f.write(str(counts))
-                break
+               break
         plt.figure(figsize=(15, 5)) #これでラベルがかぶらないくらい大きく
-        plt.title('頻繁に発言したワードベスト'+str(show), size=16)
+        plt.title('頻繁に発言したワードベスト{0} 総単語数{1}'.format(show,self.All), size=16)
         plt.bar(range(len(counts)), list(counts.values()), align='center')
         plt.xticks(range(len(counts)), list(counts.keys()))
         # 棒グラフ内に数値を書く
         for x, y in zip(range(len(counts)), counts.values()):
-            plt.text(x, y, y, ha='center', va='bottom')
+            plt.text(x, y, y, ha='center', va='bottom') #出現回数
+            plt.text(x, y/2, "{0}%".format(round((y/self.All*100),2)),ha='center',va='bottom')  #パーセンテージ
         plt.tick_params(width=2, length=10) #ラベル大きさ 
         plt.tight_layout()  #整える
         #plt.tick_params(labelsize = 10)

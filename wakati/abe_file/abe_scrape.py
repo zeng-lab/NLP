@@ -8,7 +8,7 @@ def scrape(path):
     start = '1'
     i = 0
     while start != None:
-        keyword = '麻生太郎'
+        keyword = '安倍晋三'
         startdate = '2018-01-01'
         enddate = '2018-12-31'
         meeting = '本会議'
@@ -46,5 +46,5 @@ def scrape(path):
         #    break
         
 if __name__ == '__main__':
-    path = "aso_iroiro.txt"
+    path = "abe_honkaigi.txt"
     scrape(path)
