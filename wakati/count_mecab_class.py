@@ -19,7 +19,9 @@ class Mecab:
             l = ""
             re_half = re.compile(r'[!-~]')  # 半角記号,数字,英字
             re_full = re.compile(r'[︰-＠]')  # 全角記号
-            re_full2 = re.compile(r'[、。・’〜：＜＞＿｜「」｛｝【】『』〈〉“”○〔〕…――――◇]')  # 全角で取り除けなかったやつ
+            #re_full2 = re.compile(r'[、。・’〜：＜＞＿｜「」｛｝【】『』〈〉“”○〔〕…――――◇]')  # 全角で取り除けなかったやつ
+            re_full2 = re.compile(r'[〜＿―――─―◇○]')  # くくり文字以外
+            re_comma = re.compile(r'[。]')  # 全角で取り除けなかったやつ
             re_url = re.compile(r'https?://[\w/:%#\$&\?\(\)~\.=\+\-…]+')
             re_tag = re.compile(r"<[^>]*?>")    #HTMLタグ
             re_n = re.compile(r'\n')  # 改行文字
@@ -28,12 +30,15 @@ class Mecab:
             for line in f:
                 line = re_half.sub("", line)
                 line = re_full.sub("", line)
-                line = re_full2.sub(" ", line)
+                line = re_full2.sub("", line)
                 line = re_url.sub("", line)
-                line = re_space.sub("", line)
-                line = re_n.sub("", line)
                 line = re_tag.sub("",line)
+                line = re_n.sub("", line)
+                line = re_space.sub("", line)
+                line = re_comma.sub("\n",line)  #読点で改行しておく
                 l += line
+        #with open("tmp.csv",'w') as F:
+        #    F.write(l)
         end_time = time.time() - start_time
         print("無駄処理時間",end_time)
         return l
@@ -110,8 +115,8 @@ class Mecab:
                     dicts.setdefault(count[0], 1)
                 else:
                     dicts[count[0]] += 1
+            ###メモリ解放###
             if mem:
-                #メモリ解放
                 for n, c in dicts.items():
                     if c < 100:
                         del n, c
@@ -125,7 +130,7 @@ class Mecab:
                     self.e += 200000
             else:
                 break
-        self.All = ALL
+        self.All = ALL  #総単語数
         return dicts
 
     def plot(self,countedwords):
@@ -152,12 +157,11 @@ class Mecab:
             plt.text(x, y/2, "{0}%".format(round((y/self.All*100),2)),ha='center',va='bottom')  #パーセンテージ
         plt.tick_params(width=2, length=10) #ラベル大きさ 
         plt.tight_layout()  #整える
-        #plt.tick_params(labelsize = 10)
         plt.show()
 
 if __name__ == '__main__':
     mecab = Mecab()
-    words = mecab.re_def("abe_file/abe_honkaigi.txt")
+    words = mecab.re_def("abe_file/abe_honkaigi.csv")
     stime = time.time()
     c = mecab.counting(words)
     etime = time.time() - stime
