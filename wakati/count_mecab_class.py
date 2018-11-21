@@ -3,6 +3,7 @@ import re
 import urllib3
 import codecs   #unicodeError対策
 import time
+import matplotlib.pyplot as plt
 from bs4 import BeautifulSoup
 
 class Mecab:
@@ -133,9 +134,11 @@ class Mecab:
         self.All = ALL  #総単語数
         return dicts
 
+#    def compare(self,comp1,comp2):
+#        for k, v in sorted(countedwords.items(), key=lambda x: x[1], reverse=True):  # 辞書を降順に入れる
+#            counts.update( {str(k):int(v)} )
+#
     def plot(self,countedwords):
-        #import numpy as np
-        import matplotlib.pyplot as plt
         counts = {}
         c = 1
         show = 20 #何件表示する？
@@ -161,7 +164,7 @@ class Mecab:
 
 if __name__ == '__main__':
     mecab = Mecab()
-    words = mecab.re_def("abe_file/abe_honkaigi.csv")
+    words = mecab.re_def("statements/aso_honkaigi.csv")
     stime = time.time()
     c = mecab.counting(words)
     etime = time.time() - stime

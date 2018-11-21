@@ -7,6 +7,7 @@ import os
 def scrape(path):
     start = '1'
     i = 0
+    Reco = ""
     while start != None:
         keyword = '安倍晋三'
         startdate = '2018-01-01'
@@ -23,16 +24,15 @@ def scrape(path):
         for record in obj.data.records.record:
             speechrecord = record.recordData.speechRecord
             #print(speechrecord.date.cdata,speechrecord.speech.cdata)
-
-            # w =カキコ,r =読み,a =追加カキコ,w+ =全部消してカキコ,r+ =既に書かれている内容を上書き,a+ =既に書かれている内容に追記
-            if not os.path.exists(path):
-                with open(path, 'w') as f:
-                    f.write(speechrecord.speech.cdata)
-            else:
-                with open(path, 'a') as f:
-                    f.write(speechrecord.speech.cdata)
-        
-        #start = obj.data.nextRecordPosition.cdata
+            Reco += speechrecord.speech.cdata
+        Reco += '\n'
+        # w =カキコ,r =読み,a =追加カキコ,w+ =全部消してカキコ,r+ =既に書かれている内容を上書き,a+ =既に書かれている内容に追記
+        if not os.path.exists(path):
+            with open(path, 'w') as f:
+                f.write(Reco)
+        else:
+            with open(path, 'a') as f:
+                f.write(Reco)
         
         try:    #最後にエラーで終わるからここでにゃーん
             start = obj.data.nextRecordPosition.cdata
@@ -46,5 +46,5 @@ def scrape(path):
         #    break
         
 if __name__ == '__main__':
-    path = "yosan_abe.csv"
+    path = "yosan_abe2.csv"
     scrape(path)
