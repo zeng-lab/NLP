@@ -3,16 +3,23 @@ import untangle
 import urllib.parse
 from bs4 import BeautifulSoup
 import os
+import sys
 
 def scrape(path):
     start = '1'
     i = 0
     Reco = ""
+    if os.path.exists(path):
+        a = input("ファイルあるけど上書きする？:yes(0) or no(1)")
+        if a:
+            print("しゅーりょー")
+            sys.exit()
+
     while start != None:
-        keyword = '安倍晋三'
+        keyword = '枝野幸男'
         startdate = '2018-01-01'
         enddate = '2018-12-31'
-        meeting = '予算委員会'
+        meeting = '本会議 予算委員会'
         #urllib.parse.quoteが日本語をコーディングしてくれる
         url = 'http://kokkai.ndl.go.jp/api/1.0/speech?'+urllib.parse.quote('startRecord=' + start
                                                                            + '&maximumRecords=100&speaker=' + keyword
@@ -46,5 +53,5 @@ def scrape(path):
         #    break
         
 if __name__ == '__main__':
-    path = "yosan_abe2.csv"
+    path = "edano_diet.csv"
     scrape(path)

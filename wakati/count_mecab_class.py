@@ -20,9 +20,9 @@ class Mecab:
             l = ""
             re_half = re.compile(r'[!-~]')  # 半角記号,数字,英字
             re_full = re.compile(r'[︰-＠]')  # 全角記号
-            #re_full2 = re.compile(r'[、。・’〜：＜＞＿｜「」｛｝【】『』〈〉“”○〔〕…――――◇]')  # 全角で取り除けなかったやつ
-            re_full2 = re.compile(r'[〜＿―――─―◇○]')  # くくり文字以外
-            re_comma = re.compile(r'[。]')  # 全角で取り除けなかったやつ
+            re_full2 = re.compile(r'[、・’〜：＜＞＿｜「」｛｝【】『』〈〉“”○〔〕…――――◇]')  # 全角で取り除けなかったやつ
+            #re_full2 = re.compile(r'[、〜＿―――─―◇○]')  # くくり文字以外
+            re_comma = re.compile(r'[。]')  # 読点のみ
             re_url = re.compile(r'https?://[\w/:%#\$&\?\(\)~\.=\+\-…]+')
             re_tag = re.compile(r"<[^>]*?>")    #HTMLタグ
             re_n = re.compile(r'\n')  # 改行文字
@@ -31,11 +31,11 @@ class Mecab:
             for line in f:
                 line = re_half.sub("", line)
                 line = re_full.sub("", line)
-                line = re_full2.sub("", line)
                 line = re_url.sub("", line)
                 line = re_tag.sub("",line)
                 line = re_n.sub("", line)
                 line = re_space.sub("", line)
+                line = re_full2.sub(" ", line)
                 line = re_comma.sub("\n",line)  #読点で改行しておく
                 l += line
         #with open("tmp.csv",'w') as F:
@@ -54,12 +54,11 @@ class Mecab:
         soup.pop(0) #htmlタグを殲滅せよ
         soup.pop()                      
         #SlothLibに存在しないストップワードを自分で追加↓
-        mydict = ['安倍','君','先','いわば']
+        mydict = ['君','先','いわば']
         soup.extend(mydict)
 
         ###sloth_singleword###
         sloth_1 = 'http://svn.sourceforge.jp/svnroot/slothlib/CSharp/Version1/SlothLib/NLP/Filter/StopWord/word/OneLetterJp.txt'
-        http2 = urllib3.PoolManager()  # urlib3系のおまじない
         slothl_file2 = http.request('GET', sloth_1)
         soup2 = BeautifulSoup(slothl_file2.data, 'lxml')
         soup2 = str(soup2).split()  # soupは文字列じゃないので注意
@@ -88,7 +87,7 @@ class Mecab:
         print("総文字数:" , l)
         ALL = 0 #単語のカウント
         mem = 0 #一定単語以上か判別
-        re_hiragana = re.compile(r'[あ-んア-ン一-鿐].')    #ひらがな2文字以上にヒットする正規表現
+        #re_hiragana = re.compile(r'[あ-んア-ン一-鿐].')    #ひらがな2文字以上にヒットする正規表現
         sloths = self.sloth_words() #slothのlist
         if len(all_words) > 2000000:
             mem = 1
@@ -134,10 +133,6 @@ class Mecab:
         self.All = ALL  #総単語数
         return dicts
 
-#    def compare(self,comp1,comp2):
-#        for k, v in sorted(countedwords.items(), key=lambda x: x[1], reverse=True):  # 辞書を降順に入れる
-#            counts.update( {str(k):int(v)} )
-#
     def plot(self,countedwords):
         counts = {}
         c = 1
@@ -164,7 +159,7 @@ class Mecab:
 
 if __name__ == '__main__':
     mecab = Mecab()
-    words = mecab.re_def("statements/aso_honkaigi.csv")
+    words = mecab.re_def("statements/edano_diet.csv")
     stime = time.time()
     c = mecab.counting(words)
     etime = time.time() - stime
