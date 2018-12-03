@@ -19,8 +19,7 @@ class Mecab:
             l = ""
             re_half = re.compile(r'[!-~]')  # 半角記号,数字,英字
             re_full = re.compile(r'[︰-＠]')  # 全角記号
-            re_full2 = re.compile(r'[、・’〜：＜＞＿｜「」｛｝【】『』〈〉“”○〇〔〕…――――─◇]')  # 全角で取り除けなかったやつ
-            #re_full2 = re.compile(r'[、〜＿―――─―◇○]')  # くくり文字以外
+            re_full2 = re.compile(r'[、・’〜：＜＞＿｜「」｛｝【】『』〈〉“”○〇〔〕…――――─◇]')  # 全角で取り除けなかったやつ 
             re_comma = re.compile(r'[。]')  # 全角で取り除けなかったやつ
             re_url = re.compile(r'https?://[\w/:%#\$&\?\(\)~\.=\+\-…]+')
             re_tag = re.compile(r"<[^>]*?>")    #HTMLタグ
@@ -69,11 +68,10 @@ class Mecab:
 
     def owakati(self,all_words):
         wakatifile = []
-        while len(all_words):
+        while True:
             w = all_words[self.s:self.e]
-            wakatifile += (self.tagger.parse(w).split("\n"))
-            #wakatifile.extend(tagger.parse(w).split("\n"))
-            if self.e > len(all_words) or self.e > self.stops:
+            wakatifile.extend(self.tagger.parse(w).split("\n"))
+            if self.e > self.stops or self.e > len(all_words) : 
                 break
             else:
                 self.s = self.e
@@ -81,29 +79,30 @@ class Mecab:
         return wakatifile
 
     def counting(self,all_words):
-        print("総文字数:", len(all_words))
+        print("総文字数:{0}\t({1}万字)".format(len(all_words), len(all_words)/10000))
         wakati_list = ""
+        tmp_list = []
         #ALL = 0 #単語のカウント
         mem = 0 #一定単語以上か判別
         sloths = self.sloth_words()  #slothのlist
         if len(all_words) > 2000000:    #単語数オーバーなら再帰
             mem = 1
         while True:
-            wakati = self.owakati(all_words) #分かち書きアンド形態素解析
+            wakati = self.owakati(all_words)  #分かち書きアンド形態素解析
             for addlist in wakati:
-                addlist = addlist.split()  #単語ごとにlistに分ける
-                break
-            for addword in addlist:
-                if addword in sloths:
-                    pass
-                else:
-                    wakati_list += addword + ' '    #空白で区切る
+                #tmp_list.extend(re.split('[\t,]', addlist))  # 空白と","で分割
+                tmp_list = re.split('[ ,]', addlist)  # 空白と","で分割
+                for addword in tmp_list:    #ストップワードを取り除く
+                    if addword in sloths:
+                        pass
+                    else:
+                        wakati_list += addword + ' '    #空白で区切る
             ###語数オーバーの時###
             if mem:
                 if len(all_words) < self.stops:
                     break
                 else:
-                    print("文字数オーバーなので200万文字ごとに再帰ちう")
+                    print("{}万字まで終わったよ".format(self.stops/10000))
                     self.stops += 2000000
                     self.s = self.e
                     self.e += 200000
@@ -117,6 +116,6 @@ if __name__ == '__main__':
     stime = time.time()
     c = mecab.counting(words)
     etime = time.time() - stime
-    print(etime)
-    with open("statements/edano_diet_wakati.csv", "w") as f:
+    print("処理時間:",etime)
+    with open("statements/edano_diet_wakati2.csv", "w") as f:
         f.write(c)

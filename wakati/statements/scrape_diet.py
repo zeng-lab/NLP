@@ -10,13 +10,13 @@ def scrape(path):
     i = 0
     Reco = ""
     if os.path.exists(path):
-        a = input("ファイルあるけど上書きする？:yes(0) or no(1)")
+        a = int(input("ファイルあるけど上書きする？:yes(0) or no(1)"))
         if a:
             print("しゅーりょー")
             sys.exit()
 
     while start != None:
-        keyword = '枝野幸男'
+        keyword = '麻生太郎'
         startdate = '2018-01-01'
         enddate = '2018-12-31'
         meeting = '本会議 予算委員会'
@@ -53,5 +53,5 @@ def scrape(path):
         #    break
         
 if __name__ == '__main__':
-    path = "edano_diet.csv"
+    path = "aso_diet.csv"
     scrape(path)

@@ -68,13 +68,12 @@ class Mecab:
         soup.extend(soup2)  #1つにまとめる
         return soup
 
-    def owakati(self,all_words):
+    def owakati(self, all_words):
         wakatifile = []
-        while len(all_words):
+        while True:
             w = all_words[self.s:self.e]
-            wakatifile += (self.tagger.parse(w).split("\n"))
-            #wakatifile.extend(tagger.parse(w).split("\n"))
-            if self.e > len(all_words) or self.e > self.stops:
+            wakatifile.extend(self.tagger.parse(w).split("\n"))
+            if self.e > self.stops or self.e > len(all_words):
                 break
             else:
                 self.s = self.e
@@ -83,8 +82,7 @@ class Mecab:
 
     def counting(self,all_words):
         dicts = {}  # 単語をカウントする辞書
-        l = len(all_words)
-        print("総文字数:" , l)
+        print("総文字数:{0}\t({1}万字)".format(len(all_words),len(all_words)/10000))
         ALL = 0 #単語のカウント
         mem = 0 #一定単語以上か判別
         #re_hiragana = re.compile(r'[あ-んア-ン一-鿐].')    #ひらがな2文字以上にヒットする正規表現
@@ -96,20 +94,30 @@ class Mecab:
             wakati = self.owakati(all_words) #分かち書きアンド形態素解析
             for addlist in wakati:
                 addlist = re.split('[\t,]', addlist)  # 空白と","で分割
-                for stopword in sloths: #ストップワードを取り除く
-                    while stopword in addlist[0]:
-                        del addlist[0]
-                if addlist[0] == 'EOS' or addlist[0] == '' or addlist[0] == 'ー' or addlist[0] == '*':
+                """
+                for stopword in sloths:  #ストップワードを取り除く
+                    if stopword == addlist[0]:
+                        addlist = []
+                        break
+                    #while stopword in addlist[0]:
+                    #    del addlist[0]
+                """
+                if addlist == [] or addlist[0] == 'EOS' or addlist[0] == '' or addlist[0] == 'ー' or addlist[0] == '*':
                     pass
-                #elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '動詞' and addlist[2] == '自立' or addlist[1] == '形容詞' and addlist[2] == '自立' or addlist[1] == '副詞' and addlist[2] == '一般':
-                elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '名詞' and addlist[2] == '固有名詞' and not addlist[3] == '人名':
-                    #print(addlist)  #6番目に未然形とか連用タ接続
-                    #del addlist[:7] #発言の単語ではなくその意味だけに丸める
-                    word_list.append(addlist)
+                elif addlist[1] == '名詞':  #名詞のみカウント
                     ALL += 1
+                    #elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '動詞' and addlist[2] == '自立' or addlist[1] == '形容詞' and addlist[2] == '自立' or addlist[1] == '副詞' and addlist[2] == '一般':
+                    if addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '名詞' and addlist[2] == '固有名詞' and not addlist[3] == '人名':
+                        #print(addlist)  #6番目に未然形とか連用タ接続
+                        #del addlist[:7] #発言の単語ではなくその意味だけに丸める
+                        for stopword in sloths:  # ストップワードを取り除く カウントするとこだけ処理にして処理時間削減
+                            if stopword == addlist[0]:
+                                addlist = []
+                                break
+                        if addlist:
+                            word_list.append(addlist)  #listごとに区切るのでappendでextendだとつながる
                 else:
                     pass
-                    #ALL += 1
             for count in word_list:
                 if count[0] not in dicts:
                     dicts.setdefault(count[0], 1)
@@ -117,14 +125,15 @@ class Mecab:
                     dicts[count[0]] += 1
             ###メモリ解放###
             if mem:
-                for n, c in dicts.items():
-                    if c < 100:
-                        del n, c
+                #for n, c in dicts.items():
+                #    if c < 11:
+                #        del n, c
                 if len(all_words) < self.stops:
-                    del wakati,addlist,word_list
+                    del wakati, addlist, word_list
                     break
                 else:
-                    print("文字数オーバーなので200万文字ごとに再帰ちう")
+                    del addlist
+                    print("{}万字まで終わったよ".format(self.stops/10000))
                     self.stops += 2000000
                     self.s = self.e
                     self.e += 200000
@@ -152,18 +161,28 @@ class Mecab:
         # 棒グラフ内に数値を書く
         for x, y in zip(range(len(counts)), counts.values()):
             plt.text(x, y, y, ha='center', va='bottom') #出現回数
-            plt.text(x, y/2, "{0}%".format(round((y/self.All*100),2)),ha='center',va='bottom')  #パーセンテージ
+            plt.text(x, y/2, "{0}%".format(round((y/self.All*100),3)),ha='center',va='bottom')  #パーセンテージ
         plt.tick_params(width=2, length=10) #ラベル大きさ 
         plt.tight_layout()  #整える
         plt.show()
 
+    def Search(self, countedwords,search):
+        results = {}
+        for k, v in countedwords.items():
+            if search == k:
+                results.update({str(k): int(v)})
+
+        return results
+
 if __name__ == '__main__':
     mecab = Mecab()
-    words = mecab.re_def("statements/edano_diet.csv")
+    words = mecab.re_def("statements/abe_diet.csv")
     stime = time.time()
     c = mecab.counting(words)
     etime = time.time() - stime
     print("解析処理時間",etime)
     #with open("tmp_wakati2.txt", "w") as f:
     #    f.write(str(wakati))
-    mecab.plot(c)
+    s = input("検索ワード：")
+    print(mecab.Search(c,s))
+    #mecab.plot(c)
