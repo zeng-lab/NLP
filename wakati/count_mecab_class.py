@@ -14,7 +14,7 @@ class Mecab:
         self.tagger = MeCab.Tagger()
         self.All = 0
 
-    def re_def(self,filepass):
+    def re_def(self,filepass,deltext):
         with codecs.open(filepass, 'r', encoding='utf-8', errors='ignore')as f:
         #with open(filepass, 'r')as f:
             l = ""
@@ -29,6 +29,8 @@ class Mecab:
             re_space = re.compile(r'[\s+]')  #１以上の空白文字
             start_time = time.time()
             for line in f:
+                if deltext in line:
+                    line = line.replace(deltext,"")
                 line = re_half.sub("", line)
                 line = re_full.sub("", line)
                 line = re_url.sub("", line)
@@ -107,7 +109,7 @@ class Mecab:
                 elif addlist[1] == '名詞':  #名詞のみカウント
                     ALL += 1
                     #elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '動詞' and addlist[2] == '自立' or addlist[1] == '形容詞' and addlist[2] == '自立' or addlist[1] == '副詞' and addlist[2] == '一般':
-                    if addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '名詞' and addlist[2] == '固有名詞' and not addlist[3] == '人名':
+                    if addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '名詞' and addlist[2] == '固有名詞' :#and not addlist[3] == '人名':
                         #print(addlist)  #6番目に未然形とか連用タ接続
                         #del addlist[:7] #発言の単語ではなくその意味だけに丸める
                         for stopword in sloths:  # ストップワードを取り除く カウントするとこだけ処理にして処理時間削減
@@ -126,7 +128,7 @@ class Mecab:
             ###メモリ解放###
             if mem:
                 #for n, c in dicts.items():
-                #    if c < 11:
+                #    if c < len(all_words)/10**5:
                 #        del n, c
                 if len(all_words) < self.stops:
                     del wakati, addlist, word_list
@@ -176,13 +178,16 @@ class Mecab:
 
 if __name__ == '__main__':
     mecab = Mecab()
-    words = mecab.re_def("statements/abe_diet.csv")
+    words = mecab.re_def("statements/all_ABE_diet2018.csv","○内閣総理大臣（安倍晋三君）")
+    print (words)
     stime = time.time()
     c = mecab.counting(words)
     etime = time.time() - stime
     print("解析処理時間",etime)
     #with open("tmp_wakati2.txt", "w") as f:
     #    f.write(str(wakati))
-    s = input("検索ワード：")
-    print(mecab.Search(c,s))
-    #mecab.plot(c)
+    s = input("検索ワードorPlot(1)：")
+    if s == "1":
+        mecab.plot(c)
+    else:
+        print(mecab.Search(c,s))

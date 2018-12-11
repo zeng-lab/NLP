@@ -13,7 +13,7 @@ class Mecab:
         self.tagger = MeCab.Tagger('-Owakati')
         self.All = 0
 
-    def re_def(self,filepass):
+    def re_def(self,filepass,deltext):
         with codecs.open(filepass, 'r', encoding='utf-8', errors='ignore')as f:
         #with open(filepass, 'r')as f:
             l = ""
@@ -27,6 +27,8 @@ class Mecab:
             re_space = re.compile(r'[\s+]')  #１以上の空白文字
             start_time = time.time()
             for line in f:
+                if deltext in line:
+                    line = line.replace(deltext,"")
                 line = re_half.sub("", line)
                 line = re_full.sub("", line)
                 line = re_url.sub("", line)
@@ -112,7 +114,7 @@ class Mecab:
 
 if __name__ == '__main__':
     mecab = Mecab()
-    words = mecab.re_def("statements/edano_diet.csv")
+    words = mecab.re_def("statements/edano_diet.csv","○内閣総理大臣（安倍晋三君）")
     stime = time.time()
     c = mecab.counting(words)
     etime = time.time() - stime

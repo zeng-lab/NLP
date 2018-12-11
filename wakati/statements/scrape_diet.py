@@ -16,14 +16,14 @@ def scrape(path):
             sys.exit()
 
     while start != None:
-        keyword = '麻生太郎'
+        keyword = '安倍晋三'
         startdate = '2018-01-01'
         enddate = '2018-12-31'
-        meeting = '本会議 予算委員会'
+        #meeting = '本会議 予算委員会'
         #urllib.parse.quoteが日本語をコーディングしてくれる
         url = 'http://kokkai.ndl.go.jp/api/1.0/speech?'+urllib.parse.quote('startRecord=' + start
                                                                            + '&maximumRecords=100&speaker=' + keyword
-                                                                           + '&nameOfMeeting=' + meeting
+                                                                           #+ '&nameOfMeeting=' + meeting
                                                                            + '&from=' + startdate
                                                                            + '&until=' + enddate)
         obj = untangle.parse(url)
@@ -53,5 +53,5 @@ def scrape(path):
         #    break
         
 if __name__ == '__main__':
-    path = "aso_diet.csv"
+    path = "all_ABE_diet2018.csv"
     scrape(path)
