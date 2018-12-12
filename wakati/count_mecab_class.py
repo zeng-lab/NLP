@@ -29,8 +29,9 @@ class Mecab:
             re_space = re.compile(r'[\s+]')  #１以上の空白文字
             start_time = time.time()
             for line in f:
-                if deltext in line:
-                    line = line.replace(deltext,"")
+                for dltxt in deltext:   #登壇者名は分かち書き前に消しとく
+                    if dltxt in line:
+                        line = line.replace(dltxt,"")
                 line = re_half.sub("", line)
                 line = re_full.sub("", line)
                 line = re_url.sub("", line)
@@ -157,7 +158,7 @@ class Mecab:
             #        f.write(str(counts))
                break
         plt.figure(figsize=(15, 5)) #これでラベルがかぶらないくらい大きく
-        plt.title('頻繁に発言したワードベスト{0} 総単語数{1}'.format(show,self.All), size=16)
+        plt.title('頻繁に発言したワードベスト{0} 総単語数{1} 単語の種類数{2}'.format(show,self.All,len(countedwords)), size=16)
         plt.bar(range(len(counts)), list(counts.values()), align='center')
         plt.xticks(range(len(counts)), list(counts.keys()))
         # 棒グラフ内に数値を書く
@@ -178,8 +179,7 @@ class Mecab:
 
 if __name__ == '__main__':
     mecab = Mecab()
-    words = mecab.re_def("statements/all_ABE_diet2018.csv","○内閣総理大臣（安倍晋三君）")
-    print (words)
+    words = mecab.re_def("statements/all_ABE_diet2018.csv",("○内閣総理大臣（安倍晋三君）","○安倍内閣総理大臣","○麻生国務大臣","○国務大臣（麻生太郎君）"))
     stime = time.time()
     c = mecab.counting(words)
     etime = time.time() - stime

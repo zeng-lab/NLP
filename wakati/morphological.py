@@ -27,8 +27,9 @@ class Mecab:
             re_space = re.compile(r'[\s+]')  #１以上の空白文字
             start_time = time.time()
             for line in f:
-                if deltext in line:
-                    line = line.replace(deltext,"")
+                for dltxt in deltext:   #登壇者名は分かち書き前に消しとく
+                    if dltxt in line:
+                        line = line.replace(dltxt,"")
                 line = re_half.sub("", line)
                 line = re_full.sub("", line)
                 line = re_url.sub("", line)
@@ -114,10 +115,10 @@ class Mecab:
 
 if __name__ == '__main__':
     mecab = Mecab()
-    words = mecab.re_def("statements/edano_diet.csv","○内閣総理大臣（安倍晋三君）")
+    words = mecab.re_def("statements/aso_diet.csv",("○内閣総理大臣（安倍晋三君）","○安倍内閣総理大臣","○麻生国務大臣","○国務大臣（麻生太郎君）"))
     stime = time.time()
     c = mecab.counting(words)
     etime = time.time() - stime
     print("処理時間:",etime)
-    with open("statements/edano_diet_wakati2.csv", "w") as f:
+    with open("statements/aso_diet_wakati.csv", "w") as f:
         f.write(c)
