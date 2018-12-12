@@ -14,7 +14,7 @@ class Mecab:
         self.tagger = MeCab.Tagger()
         self.All = 0
 
-    def re_def(self,filepass,deltext):
+    def re_def(self,filepass):
         with codecs.open(filepass, 'r', encoding='utf-8', errors='ignore')as f:
         #with open(filepass, 'r')as f:
             l = ""
@@ -27,11 +27,12 @@ class Mecab:
             re_tag = re.compile(r"<[^>]*?>")    #HTMLタグ
             re_n = re.compile(r'\n')  # 改行文字
             re_space = re.compile(r'[\s+]')  #１以上の空白文字
+            pattern = "(.*)\s(.*)"
             start_time = time.time()
             for line in f:
-                for dltxt in deltext:   #登壇者名は分かち書き前に消しとく
-                    if dltxt in line:
-                        line = line.replace(dltxt,"")
+                if '○' in line:
+                    sep = re.search(pattern,line)
+                    line = line.replace(sep.group(1),"")
                 line = re_half.sub("", line)
                 line = re_full.sub("", line)
                 line = re_url.sub("", line)
@@ -179,7 +180,7 @@ class Mecab:
 
 if __name__ == '__main__':
     mecab = Mecab()
-    words = mecab.re_def("statements/all_ABE_diet2018.csv",("○内閣総理大臣（安倍晋三君）","○安倍内閣総理大臣","○麻生国務大臣","○国務大臣（麻生太郎君）"))
+    words = mecab.re_def("statements/all_ABE_diet2018.csv")
     stime = time.time()
     c = mecab.counting(words)
     etime = time.time() - stime

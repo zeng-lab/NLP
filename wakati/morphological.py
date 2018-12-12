@@ -25,11 +25,12 @@ class Mecab:
             re_tag = re.compile(r"<[^>]*?>")    #HTMLタグ
             re_n = re.compile(r'\n')  # 改行文字
             re_space = re.compile(r'[\s+]')  #１以上の空白文字
+            pattern = "(.*)\s(.*)"
             start_time = time.time()
             for line in f:
-                for dltxt in deltext:   #登壇者名は分かち書き前に消しとく
-                    if dltxt in line:
-                        line = line.replace(dltxt,"")
+                if '○' in line:
+                    sep = re.search(pattern,line)
+                    line = line.replace(sep.group(1),"")
                 line = re_half.sub("", line)
                 line = re_full.sub("", line)
                 line = re_url.sub("", line)
