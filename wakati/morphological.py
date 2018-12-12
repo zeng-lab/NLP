@@ -13,7 +13,7 @@ class Mecab:
         self.tagger = MeCab.Tagger('-Owakati')
         self.All = 0
 
-    def re_def(self,filepass,deltext):
+    def re_def(self,filepass):
         with codecs.open(filepass, 'r', encoding='utf-8', errors='ignore')as f:
         #with open(filepass, 'r')as f:
             l = ""
@@ -25,10 +25,10 @@ class Mecab:
             re_tag = re.compile(r"<[^>]*?>")    #HTMLタグ
             re_n = re.compile(r'\n')  # 改行文字
             re_space = re.compile(r'[\s+]')  #１以上の空白文字
-            pattern = "(.*)\s(.*)"
+            pattern = "(.*)　(.*)"  #全角スペースで分ける
             start_time = time.time()
             for line in f:
-                if '○' in line:
+                if '○' in line: #○からスペースまで名前なので取り除く
                     sep = re.search(pattern,line)
                     line = line.replace(sep.group(1),"")
                 line = re_half.sub("", line)
@@ -116,10 +116,10 @@ class Mecab:
 
 if __name__ == '__main__':
     mecab = Mecab()
-    words = mecab.re_def("statements/aso_diet.csv",("○内閣総理大臣（安倍晋三君）","○安倍内閣総理大臣","○麻生国務大臣","○国務大臣（麻生太郎君）"))
+    words = mecab.re_def("statements/aso_diet.csv")
     stime = time.time()
     c = mecab.counting(words)
     etime = time.time() - stime
     print("処理時間:",etime)
-    with open("statements/aso_diet_wakati.csv", "w") as f:
+    with open("statements/aso_diet_wakati2.csv", "w") as f:
         f.write(c)

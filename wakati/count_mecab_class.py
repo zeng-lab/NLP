@@ -27,10 +27,10 @@ class Mecab:
             re_tag = re.compile(r"<[^>]*?>")    #HTMLタグ
             re_n = re.compile(r'\n')  # 改行文字
             re_space = re.compile(r'[\s+]')  #１以上の空白文字
-            pattern = "(.*)\s(.*)"
+            pattern = "(.*)　(.*)"  #全角スペースで分ける
             start_time = time.time()
             for line in f:
-                if '○' in line:
+                if '○' in line: #○からスペースまで名前なので取り除く
                     sep = re.search(pattern,line)
                     line = line.replace(sep.group(1),"")
                 line = re_half.sub("", line)
