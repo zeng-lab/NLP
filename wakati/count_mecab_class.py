@@ -4,6 +4,7 @@ import urllib3
 import codecs   #unicodeError対策
 import time
 import argparse
+import json
 import matplotlib.pyplot as plt
 from bs4 import BeautifulSoup
 
@@ -13,7 +14,6 @@ class Mecab:
         self.e = 200000
         self.stops = 2000000
         self.tagger = MeCab.Tagger()
-        self.All = 0
 
     def re_def(self,filepass):
         with codecs.open(filepass, 'r', encoding='utf-8', errors='ignore')as f:
@@ -43,8 +43,6 @@ class Mecab:
                 line = re_full2.sub(" ", line)
                 line = re_comma.sub("\n",line)  #読点で改行しておく
                 l += line
-        #with open("tmp.csv",'w') as F:
-        #    F.write(l)
         end_time = time.time() - start_time
         print("無駄処理時間",end_time)
         return l
@@ -88,7 +86,6 @@ class Mecab:
     def counting(self,all_words):
         dicts = {}  # 単語をカウントする辞書
         print("総文字数:{0}\t({1}万字)".format(len(all_words),len(all_words)/10000))
-        ALL = 0 #単語のカウント
         mem = 0 #一定単語以上か判別
         #re_hiragana = re.compile(r'[あ-んア-ン一-鿐].')    #ひらがな2文字以上にヒットする正規表現
         sloths = self.sloth_words() #slothのlist
@@ -100,7 +97,7 @@ class Mecab:
             for addlist in wakati:
                 addlist = re.split('[\t,]', addlist)  # 空白と","で分割
                 """
-                for stopword in sloths:  #ストップワードを取り除く
+                for stopword in sloths:  #全文からストップワードを取り除く
                     if stopword == addlist[0]:
                         addlist = []
                         break
@@ -110,7 +107,6 @@ class Mecab:
                 if addlist == [] or addlist[0] == 'EOS' or addlist[0] == '' or addlist[0] == 'ー' or addlist[0] == '*':
                     pass
                 elif addlist[1] == '名詞':  #名詞のみカウント
-                    ALL += 1
                     #elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '動詞' and addlist[2] == '自立' or addlist[1] == '形容詞' and addlist[2] == '自立' or addlist[1] == '副詞' and addlist[2] == '一般':
                     if addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '名詞' and addlist[2] == '固有名詞' :#and not addlist[3] == '人名':
                         #print(addlist)  #6番目に未然形とか連用タ接続
@@ -144,29 +140,26 @@ class Mecab:
                     self.e += 200000
             else:
                 break
-        self.All = ALL  #総単語数
         return dicts
 
     def plot(self,countedwords):
         counts = {}
+        total = sum(countedwords.values())
         c = 1
         show = 20 #何件表示する？
         for k, v in sorted(countedwords.items(), key=lambda x: x[1], reverse=True):  # 辞書を降順に入れる
             counts.update( {str(k):int(v)} )
             c += 1
             if c > show:
-            ###結果の出力###
-            #    with open("result_wakati.txt", "w") as f:
-            #        f.write(str(counts))
                break
         plt.figure(figsize=(15, 5)) #これでラベルがかぶらないくらい大きく
-        plt.title('頻繁に発言したワードベスト{0} 総単語数{1} 単語の種類数{2}'.format(show,self.All,len(countedwords)), size=16)
+        plt.title('頻繁に発言したワードベスト{0} 総単語数{1} 単語の種類数{2}'.format(show,total,len(countedwords)), size=16)
         plt.bar(range(len(counts)), list(counts.values()), align='center')
         plt.xticks(range(len(counts)), list(counts.keys()))
         # 棒グラフ内に数値を書く
         for x, y in zip(range(len(counts)), counts.values()):
             plt.text(x, y, y, ha='center', va='bottom') #出現回数
-            plt.text(x, y/2, "{0}%".format(round((y/self.All*100),3)),ha='center',va='bottom')  #パーセンテージ
+            plt.text(x, y/2, "{0}%".format(round((y/total*100),3)),ha='center',va='bottom')  #パーセンテージ
         plt.tick_params(width=2, length=10) #ラベル大きさ 
         plt.tight_layout()  #整える
         plt.show()
@@ -185,18 +178,26 @@ if __name__ == '__main__':
     parser.add_argument('--save', '-s' , type=str)
     parser.add_argument('--look', '-l' , type=str)
     args = parser.parse_args()
-
-
     mecab = Mecab()
-    words = mecab.re_def(args.input)
-    stime = time.time()
-    c = mecab.counting(words)
-    etime = time.time() - stime
-    print("解析処理時間",etime)
-    if args.save:
-        with open(args.save, "w") as f:
-            for key,value in c.items():
-                f.write(f'{key} {value}\n')
+
+    if args.look:
+        text = ""
+        with open(args.look,'r') as f:
+            for l in f:
+                text += l
+        c = json.loads(text,encoding='utf-8')
+    else:
+        words = mecab.re_def(args.input)
+        stime = time.time()
+        c = mecab.counting(words)
+        etime = time.time() - stime
+        print("解析処理時間",etime)
+        if args.save:
+            with open(args.save, "w") as f:
+                text = json.dumps(c,ensure_ascii=False, indent=2 ) #Falseで文字化け解消
+                f.write(text)
+                #for key,value in c.items():
+                #    f.write(f'{key} {value}\n')
     s = input("検索ワードorPlot(1)：")
     if s == "1":
         mecab.plot(c)
