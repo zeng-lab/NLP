@@ -11,7 +11,7 @@ class Mecab:
         self.s = 0
         self.e = 200000
         self.stops = 2000000
-        self.tagger = MeCab.Tagger('-Owakati')
+        self.tagger = MeCab.Tagger('-Owakati -d /usr/lib/x86_64-linux-gnu/mecab/dic/mecab-ipadic-neologd')
         self.All = 0
 
     def re_def(self,filepass):

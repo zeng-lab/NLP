@@ -13,7 +13,7 @@ class Mecab:
         self.s = 0
         self.e = 200000
         self.stops = 2000000
-        self.tagger = MeCab.Tagger()
+        self.tagger = MeCab.Tagger("-d /usr/lib/x86_64-linux-gnu/mecab/dic/mecab-ipadic-neologd")
 
     def re_def(self,filepass):
         with codecs.open(filepass, 'r', encoding='utf-8', errors='ignore')as f:
@@ -174,15 +174,15 @@ class Mecab:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input', '-i', type=str)
-    parser.add_argument('--save', '-s' , type=str)
-    parser.add_argument('--look', '-l' , type=str)
+    parser.add_argument('--input', '-i', type=str)  #inputファイルを指定
+    parser.add_argument('--out', '-o' , type=str)  #結果の出力
+    parser.add_argument('--search', '-s' , type=str)  #結果ファイルから検索とか
     args = parser.parse_args()
     mecab = Mecab()
 
-    if args.look:
+    if args.search:
         text = ""
-        with open(args.look,'r') as f:
+        with open(args.search,'r') as f:
             for l in f:
                 text += l
         c = json.loads(text,encoding='utf-8')
@@ -192,8 +192,8 @@ if __name__ == '__main__':
         c = mecab.counting(words)
         etime = time.time() - stime
         print("解析処理時間",etime)
-        if args.save:
-            with open(args.save, "w") as f:
+        if args.out:
+            with open(args.out, "w") as f:
                 text = json.dumps(c,ensure_ascii=False, indent=2 ) #Falseで文字化け解消
                 f.write(text)
                 #for key,value in c.items():
