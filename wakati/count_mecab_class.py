@@ -3,6 +3,7 @@ import re
 import urllib3
 import codecs   #unicodeError対策
 import time
+import argparse
 import matplotlib.pyplot as plt
 from bs4 import BeautifulSoup
 
@@ -179,16 +180,29 @@ class Mecab:
         return results
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input', '-i', type=str)
+    parser.add_argument('--save', '-s' , type=str)
+    parser.add_argument('--look', '-l' , type=str)
+    args = parser.parse_args()
+
+
     mecab = Mecab()
-    words = mecab.re_def("statements/all_ABE_diet2018.csv")
+    words = mecab.re_def(args.input)
     stime = time.time()
     c = mecab.counting(words)
     etime = time.time() - stime
     print("解析処理時間",etime)
-    #with open("tmp_wakati2.txt", "w") as f:
-    #    f.write(str(wakati))
+    if args.save:
+        with open(args.save, "w") as f:
+            for key,value in c.items():
+                f.write(f'{key} {value}\n')
     s = input("検索ワードorPlot(1)：")
     if s == "1":
         mecab.plot(c)
     else:
-        print(mecab.Search(c,s))
+        while True:
+            print(mecab.Search(c,s))
+            s = input("検索ワード or end(push 0)：")
+            if s == "0":
+                break

@@ -3,6 +3,7 @@ import re
 import urllib3
 import codecs   #unicodeError対策
 import time
+import argparse
 from bs4 import BeautifulSoup
 
 class Mecab:
@@ -115,11 +116,17 @@ class Mecab:
         return wakati_list
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input', '-i', type=str)
+    parser.add_argument('--out', '-o' , type=str)
+    args = parser.parse_args()
+    
     mecab = Mecab()
-    words = mecab.re_def("statements/aso_diet.csv")
+    words = mecab.re_def(args.input)
     stime = time.time()
     c = mecab.counting(words)
+    with open(args.out, "w") as f:
+        f.write(c)
+
     etime = time.time() - stime
     print("処理時間:",etime)
-    with open("statements/aso_diet_wakati2.csv", "w") as f:
-        f.write(c)
