@@ -10,48 +10,54 @@ def scrape(path):
     i = 0
     Reco = ""
     if os.path.exists(path):
-        a = int(input("ファイルあるけど上書きする？:yes(0) or no(1)"))
+        a = int(input("ファイルあるけど上書きする？:yes(0) or no(1)："))
         if a:
             print("しゅーりょー")
             sys.exit()
+        else:
+            with open(path,'w') as f:
+                f.write("")
 
-    while start != None:
-        keyword = '安倍晋三'
-        startdate = '2018-01-01'
-        enddate = '2018-12-31'
-        #meeting = '本会議 予算委員会'
+    while True:
+        keyword = '枝野幸男'
+        startdate = '2017-01-01'
+        #enddate = '2018-12-31'
+        maxreco = '100' #最大１００件
+        meeting = '本会議 予算委員会'
         #urllib.parse.quoteが日本語をコーディングしてくれる
         url = 'http://kokkai.ndl.go.jp/api/1.0/speech?'+urllib.parse.quote('startRecord=' + start
-                                                                           + '&maximumRecords=100&speaker=' + keyword
-                                                                           #+ '&nameOfMeeting=' + meeting
-                                                                           + '&from=' + startdate
-                                                                           + '&until=' + enddate)
+                                                                           + '&maximumRecords=' + maxreco
+                                                                           + '&speaker=' + keyword
+                                                                           + '&nameOfMeeting=' + meeting
+                                                                           + '&from=' + startdate)
+                                                                           #+ '&until=' + enddate)
         obj = untangle.parse(url)
         #print(obj.data.numberOfRecords.cdata, type(obj.data.records.record))
+        art = obj.data.numberOfRecords.cdata
         for record in obj.data.records.record:
             speechrecord = record.recordData.speechRecord
             #print(speechrecord.date.cdata,speechrecord.speech.cdata)
             Reco += speechrecord.speech.cdata
         Reco += '\n'
-        # w =カキコ,r =読み,a =追加カキコ,w+ =全部消してカキコ,r+ =既に書かれている内容を上書き,a+ =既に書かれている内容に追記
-        if not os.path.exists(path):
-            with open(path, 'w') as f:
+        if not i%300:   #300件超えるならここでカキコ
+            with open(path, 'a+') as f:
                 f.write(Reco)
-        else:
-            with open(path, 'a') as f:
-                f.write(Reco)
-        
+            Reco = ""
         try:    #最後にエラーで終わるからここでにゃーん
             start = obj.data.nextRecordPosition.cdata
         except AttributeError:
-            print("にゃーん")
+            print("にゃーんえらー")
             break
-        
-        i += 1
-        print("取得ちう")
-        #if i == 1:
-        #    break
+        i += 100
+        if i > int(art):
+            print("件数到達")
+            break
+        print("{0}件中{1}件目".format(art,i))
+    return Reco
         
 if __name__ == '__main__':
-    path = "all_ABE_diet2018.csv"
-    scrape(path)
+    path = "edano_diet.csv"
+    r = scrape(path)
+    # w =カキコ,r =読み,a =追加カキコ,w+ =全部消してカキコ,r+ =既に書かれている内容を上書き,a+ =既に書かれている内容に追記
+    with open(path, 'a+') as f: #残りをかきこ
+        f.write(r)
