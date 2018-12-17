@@ -166,11 +166,12 @@ class Mecab:
 
     def Search(self, countedwords,search):
         results = {}
+        total = {"単語の種類数":sum(countedwords.values()),"単語の総数":len(countedwords)}
         for k, v in countedwords.items():
             if search == k:
                 results.update({str(k): int(v)})
 
-        return results
+        return results , total
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -203,8 +204,11 @@ if __name__ == '__main__':
     if s == "1":
         mecab.plot(c)
     else:
+        s_word,count = mecab.Search(c,s)
+        print(count)
         while True:
-            print(mecab.Search(c,s))
+            print(s_word)
             s = input("検索ワード or end(push 0)：")
+            s_word = mecab.Search(c,s)
             if s == "0":
                 break

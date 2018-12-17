@@ -57,7 +57,7 @@ class Mecab:
         soup.pop(0) #htmlタグを殲滅せよ
         soup.pop()                      
         #SlothLibに存在しないストップワードを自分で追加↓
-        mydict = ['君','先','いわば']
+        mydict = ['君','先','いわば','氏']
         soup.extend(mydict)
 
         ###sloth_singleword###
