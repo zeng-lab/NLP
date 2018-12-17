@@ -181,6 +181,7 @@ if __name__ == '__main__':
     mecab = Mecab()
 
     if args.search:
+        print("resultに出力したファイルを読み取ります")
         text = ""
         with open(args.search,'r') as f:
             for l in f:
