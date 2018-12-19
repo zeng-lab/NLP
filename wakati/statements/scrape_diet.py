@@ -19,16 +19,16 @@ def scrape(path):
                 f.write("")
 
     while True:
-        keyword = '枝野幸男'
-        startdate = '2017-01-01'
+        #keyword = '安倍晋三'
+        startdate = '2016-01-01'
         #enddate = '2018-12-31'
         maxreco = '100' #最大１００件
-        meeting = '本会議 予算委員会'
+        #meeting = '本会議 予算委員会'
         #urllib.parse.quoteが日本語をコーディングしてくれる
         url = 'http://kokkai.ndl.go.jp/api/1.0/speech?'+urllib.parse.quote('startRecord=' + start
                                                                            + '&maximumRecords=' + maxreco
-                                                                           + '&speaker=' + keyword
-                                                                           + '&nameOfMeeting=' + meeting
+                                                                           #+ '&speaker=' + keyword
+                                                                           #+ '&nameOfMeeting=' + meeting
                                                                            + '&from=' + startdate)
                                                                            #+ '&until=' + enddate)
         obj = untangle.parse(url)
@@ -56,7 +56,7 @@ def scrape(path):
     return Reco
         
 if __name__ == '__main__':
-    path = "edano_diet.csv"
+    path = "diet2016to_now.csv"
     r = scrape(path)
     # w =カキコ,r =読み,a =追加カキコ,w+ =全部消してカキコ,r+ =既に書かれている内容を上書き,a+ =既に書かれている内容に追記
     with open(path, 'a+') as f: #残りをかきこ
