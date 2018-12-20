@@ -19,7 +19,6 @@ def scrape(path):
         else:
             with open(path,'w') as f:
                 f.write("")
-
     while True:
         #keyword = '麻生太郎'
         startdate = '2018-01-01'
