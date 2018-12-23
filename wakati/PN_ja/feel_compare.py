@@ -19,7 +19,7 @@ def re_def(filepass):
         re_tag = re.compile(r"<[^>]*?>")    #HTMLタグ
         re_n = re.compile(r'\n')  # 改行文字
         re_space = re.compile(r'[\s+]')  #１以上の空白文字
-        re_matchday = re.compile(r'[0-9]')
+        re_matchday = re.compile(r'^\d{4}-\d{1,2}-\d{1,2}$')
         pattern = "(.*)　(.*)"  #全角スペースで分ける
         start_time = time.time()
         for line in f:
@@ -40,9 +40,9 @@ def re_def(filepass):
     return l
 
 def Match():
-    if os.path.exists("pn_ja.dic"):
+    if os.path.exists("pn_ja.txt"):
         text = ""
-        with open("pn_ja.dic",'r') as f:
+        with open("pn_ja.txt",'r') as f:
             for l in f:
                 text += l
         ja_dic = json.loads(text,encoding='utf-8')
@@ -56,7 +56,7 @@ def Match():
             ja_dic.update([(str(sep[0]),float(sep[3]))])
             html = res.readline().decode("shift_jis",'ignore').rstrip('\r\n')
     ###毎回呼ぶの面倒だからファイル作る
-    with open("pn_ja.dic","w") as f:
+    with open("pn_ja.txt","w") as f:
         text_dic = json.dumps(ja_dic,ensure_ascii=False, indent=2 )
         f.write(text_dic)
     return ja_dic
@@ -64,37 +64,38 @@ def Match():
 def date_sep(all_words):
     day = ""
     meeting = ""
-    all_words = all_words.split("\n")
+    re_day = re.compile(r'^\d{4}-\d{1,2}-\d{1,2}$')
+    all_words = re.split("[ \n]",all_words)
     for line in all_words:
-        if day != line and re.match(r'[0-9]',line):###マッチパターン考えよう
+        if not line:
+            pass
+        if re_day.match(day) and re_day.match(line) and day != line:
             yield day ,meeting
+            meeting = ""
             day = line
-        elif re.match(r'[0-9]',line):
+        elif re_day.match(line):
             day = line
         else:
             meeting += line + '\n'
             
 def counting(all_words):
     print("総文字数:{0}\t({1}万字)".format(len(all_words), len(all_words)/10000))
-    tmp_list = []
     ja_dict = Match()  #Matchぱたーん
-    setcount = 0
-    notMatch = 0
-    score = 0
     tagger = MeCab.Tagger('-Owakati -d /usr/lib/x86_64-linux-gnu/mecab/dic/mecab-ipadic-neologd')
-    while True:
-        day,wakati = date_sep(all_words)
-        wakati = tagger.parse(wakati).split("\n")
-        for addlist in wakati:
-            tmp_list = re.split('[ ,]', addlist)  # 空白と","で分割
-            for match_key,match_value in ja_dict.items():
-                if match_key in tmp_list:
-                    setcount += 1
-                    score += float(match_value)
-                else:
-                    notMatch += 1
-        print(day, score, setcount, notMatch)
-        yield day, score, setcount, notMatch
+    #while True:
+    for day,wakati in date_sep(all_words):
+        setcount = 0
+        notMatch = 0
+        score = 0
+        wakati = tagger.parse(wakati)#.split("\n")
+        wakati = re.split('[ ,\n]', wakati)
+        for Word in wakati:
+            if Word in ja_dict.keys():
+                score += float(ja_dict[Word])
+                setcount += 1
+            else:
+                notMatch += 1
+        yield day, score/(setcount + notMatch), setcount, notMatch
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -104,10 +105,7 @@ if __name__ == '__main__':
     
     words = re_def(args.input)
     stime = time.time()
-    while True:
-        day , score , hitword , nohit = counting(words)
-        if day == "":
-            break
+    for day , score , hitword , nohit in counting(words):
         print(day , score , hitword , nohit)
     etime = time.time() - stime
     print("処理時間:",etime)
