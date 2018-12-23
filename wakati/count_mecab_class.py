@@ -1,10 +1,11 @@
 import MeCab
 import re
-import urllib3
+import urllib.request
 import codecs   #unicodeError対策
 import time
 import argparse
 import json
+import os
 import matplotlib.pyplot as plt
 from bs4 import BeautifulSoup
 
@@ -48,27 +49,34 @@ class Mecab:
         return l
 
     def sloth_words(self):    #slothwordのlist化
+        if os.path.exists("sloth_words.txt"):
+            text = ""
+            with open("sloth_words.txt",'r') as f:
+                for l in f:
+                    text += l
+            soup = json.loads(text,encoding='utf-8')
+            return soup
         ###sloth_words###
         sloth = 'http://svn.sourceforge.jp/svnroot/slothlib/CSharp/Version1/SlothLib/NLP/Filter/StopWord/word/Japanese.txt'
-        http = urllib3.PoolManager() #urlib3系のおまじない
-        slothl_file = http.request('GET', sloth)
-        soup = BeautifulSoup(slothl_file.data, 'lxml')
+        slothl_file = urllib.request.urlopen(sloth)
+        soup = BeautifulSoup(slothl_file, 'lxml')
         soup = str(soup).split()  # soupは文字列じゃないので注意
         soup.pop(0) #htmlタグを殲滅せよ
-        soup.pop()                      
-        #SlothLibに存在しないストップワードを自分で追加↓
+        soup.pop()
         mydict = ['君','先','いわば']
         soup.extend(mydict)
-
         ###sloth_singleword###
         sloth_1 = 'http://svn.sourceforge.jp/svnroot/slothlib/CSharp/Version1/SlothLib/NLP/Filter/StopWord/word/OneLetterJp.txt'
-        slothl_file2 = http.request('GET', sloth_1)
-        soup2 = BeautifulSoup(slothl_file2.data, 'lxml')
+        slothl_file2 = urllib.request.urlopen(sloth_1)
+        soup2 = BeautifulSoup(slothl_file2, 'lxml')
         soup2 = str(soup2).split()  # soupは文字列じゃないので注意
-        soup2.pop(0)  # htmlタグを殲滅せよ
+        soup2.pop(0)
         soup2.pop()
-
         soup.extend(soup2)  #1つにまとめる
+        ###毎回呼ぶの面倒だからファイル作る
+        with open("sloth_words.txt","w") as f:
+            text_dic = json.dumps(soup,ensure_ascii=False, indent=2 )
+            f.write(text_dic)
         return soup
 
     def owakati(self, all_words):

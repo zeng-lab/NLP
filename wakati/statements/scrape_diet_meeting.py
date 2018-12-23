@@ -10,7 +10,7 @@ def scrape(path):
     i = 0
     Reco = ""
     day = ""
-    chairs = ["大島理森","赤松広隆","伊達忠一","郡司彰"]    #議長リスト
+    chairs = ["大島理森","赤松広隆","伊達忠一","郡司彰","山崎正昭","輿石東","川端達夫"]    #議長リスト
     if os.path.exists(path):
         a = int(input("ファイルあるけど上書きする？:yes(0) or no(1)："))
         if a:
