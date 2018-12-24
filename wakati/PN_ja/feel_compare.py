@@ -81,7 +81,9 @@ def date_sep(all_words):
 def counting(all_words):
     print("総文字数:{0}\t({1}万字)".format(len(all_words), len(all_words)/10000))
     ja_dict = Match()  #Matchぱたーん
-    tagger = MeCab.Tagger('-Owakati -d /usr/lib/x86_64-linux-gnu/mecab/dic/mecab-ipadic-neologd')
+    #tagger = MeCab.Tagger('-Owakati -d /usr/lib/x86_64-linux-gnu/mecab/dic/mecab-ipadic-neologd')
+    tagger = MeCab.Tagger('-Owakati -d /usr/local/lib/mecab/dic/mecab-ipadic-neologd')
+
     #while True:
     for day,wakati in date_sep(all_words):
         setcount = 0
@@ -106,6 +108,7 @@ if __name__ == '__main__':
     words = re_def(args.input)
     stime = time.time()
     for day , score , hitword , nohit in counting(words):
-        print(day , score , hitword , nohit)
+        hits = (hitword/(hitword+nohit) )*100
+        print(day , round(score,4) ,hitword ,nohit ,"{0}%".format(round(hits,2)))
     etime = time.time() - stime
     print("処理時間:",etime)
