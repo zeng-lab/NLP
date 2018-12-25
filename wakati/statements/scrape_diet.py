@@ -10,7 +10,7 @@ def scrape(path):
     i = 0
     Reco = ""
     day = ""
-    chairs = ["大島理森","赤松広隆","伊達忠一","郡司彰","山崎正昭","輿石東","川端達夫"]    #議長リスト
+    chairs = ["大島理森","赤松広隆","伊達忠一","郡司彰","山崎正昭","輿石東","川端達夫","金子原二郎"]    #議長リスト
     if os.path.exists(path):
         a = int(input("ファイルあるけど上書きする？:yes(0) or no(1)："))
         if a:
@@ -20,16 +20,18 @@ def scrape(path):
             with open(path,'w') as f:
                 f.write("")
     while True:
-        keyword = '安倍晋三'
-        startdate = '2013-01-01'
+        #keyword = '安倍晋三'
+        startdate = '2018-01-01'
         #enddate = '2018-12-31'
         maxreco = '100'
-        #meeting = '本会議 予算委員会'
+        meeting = '本会議'
+        search = '改正 法 反対の立場から'
         #urllib.parse.quoteが日本語をコーディングしてくれる
         url = 'http://kokkai.ndl.go.jp/api/1.0/speech?'+urllib.parse.quote('startRecord=' + start
                                                                            + '&maximumRecords=' + maxreco
-                                                                           + '&speaker=' + keyword
-                                                                           #+ '&nameOfMeeting=' + meeting
+                                                                           #+ '&speaker=' + keyword
+                                                                           + '&any=' + search
+                                                                           + '&nameOfMeeting=' + meeting
                                                                            + '&from=' + startdate)
                                                                            #+ '&until=' + enddate)
         obj = untangle.parse(url)
@@ -63,7 +65,7 @@ def scrape(path):
     return Reco
         
 if __name__ == '__main__':
-    path = "Fullof_ABE.csv"
+    path = "disagree.csv"
     r = scrape(path)
     # w =カキコ,r =読み,a =追加カキコ,w+ =全部消してカキコ,r+ =既に書かれている内容を上書き,a+ =既に書かれている内容に追記
     with open(path, 'a+') as f: #残りをかきこ
