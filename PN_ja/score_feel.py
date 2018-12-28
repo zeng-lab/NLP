@@ -80,7 +80,7 @@ def counting(all_words):
             setcount += 1
         else:
             notMatch += 1
-    return score/setcount, setcount, notMatch
+    return score/(setcount+notMatch), setcount, notMatch
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
