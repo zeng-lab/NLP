@@ -4,7 +4,6 @@ import urllib.parse
 from bs4 import BeautifulSoup
 import os
 import sys
-import argparse
 
 def scrape(path):
     start = '1'
@@ -21,21 +20,21 @@ def scrape(path):
             with open(path,'w') as f:
                 f.write("")
     while True:
-        #keyword = '安倍晋三'
-        #startdate = '2000-01-01'
-        #enddate = '2018-12-31'
+        keyword = '麻生太郎'
+        startdate = '1998-01-01'
+        enddate = '1998-12-31'
         maxreco = '100'
         #meeting = '本会議'
-        search = '反対の立場　討論　改正'
+        #search = '反対の立場　討論　改正'
         #search = '解任決議 反対の立場から'
         #urllib.parse.quoteが日本語をコーディングしてくれる
         url = 'http://kokkai.ndl.go.jp/api/1.0/speech?'+urllib.parse.quote('startRecord=' + start
                                                                            + '&maximumRecords=' + maxreco
-                                                                           #+ '&speaker=' + keyword
-                                                                           + '&any=' + search)
+                                                                           + '&speaker=' + keyword
+                                                                           #+ '&any=' + search)
                                                                            #+ '&nameOfMeeting=' + meeting)
-                                                                           #+ '&from=' + startdate)
-                                                                           #+ '&until=' + enddate)
+                                                                           + '&from=' + startdate
+                                                                           + '&until=' + enddate)
         obj = untangle.parse(url)
         art = obj.data.numberOfRecords.cdata
         for record in obj.data.records.record:
@@ -67,11 +66,8 @@ def scrape(path):
     return Reco
         
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('input',type=str)
-    args = parser.parse_args()
-
-    r = scrape(args.input)
+    path = sys.argv[1]
+    r = scrape(path)
     # w =カキコ,r =読み,a =追加カキコ,w+ =全部消してカキコ,r+ =既に書かれている内容を上書き,a+ =既に書かれている内容に追記
-    with open(args.input, 'a+') as f: #残りをかきこ
+    with open(path, 'a+') as f: #残りをかきこ
         f.write(r)

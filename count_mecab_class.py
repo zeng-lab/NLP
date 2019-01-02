@@ -6,6 +6,7 @@ import time
 import argparse
 import json
 import os
+import mojimoji
 import matplotlib.pyplot as plt
 from bs4 import BeautifulSoup
 
@@ -29,9 +30,12 @@ class Mecab:
             re_tag = re.compile(r"<[^>]*?>")    #HTMLタグ
             re_n = re.compile(r'\n')  # 改行文字
             re_space = re.compile(r'[\s+]')  #１以上の空白文字
+            re_num = re.compile(r"[0-9]")
             pattern = "(.*)　(.*)"  #全角スペースで分ける
             start_time = time.time()
             for line in f:
+                if re_num.match(line):
+                    line = mojimoji.han_to_zen(line, ascii=False)
                 if '○' in line: #○からスペースまで名前なので取り除く
                     sep = re.search(pattern,line)
                     line = line.replace(sep.group(1),"")

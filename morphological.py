@@ -3,9 +3,10 @@ import re
 import urllib.request
 import codecs   #unicodeError対策
 import time
-import argparse
+import sys
 import os
 import json
+import mojimoji
 from bs4 import BeautifulSoup
 
 class Mecab:
@@ -28,9 +29,12 @@ class Mecab:
             re_tag = re.compile(r"<[^>]*?>")    #HTMLタグ
             re_n = re.compile(r'\n')  # 改行文字
             re_space = re.compile(r'[\s+]')  #１以上の空白文字
+            re_num = re.compile(r"[0-9]")
             pattern = "(.*)　(.*)"
             start_time = time.time()
             for line in f:
+                if re_num.match(line):
+                    line = mojimoji.han_to_zen(line, ascii=False)
                 if '○' in line: #○からスペースまで名前なので取り除く
                     sep = re.search(pattern,line)
                     line = line.replace(sep.group(1),"")
@@ -126,16 +130,13 @@ class Mecab:
         return wakati_list
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--input', '-i', type=str)
-    parser.add_argument('--out', '-o' , type=str)
-    args = parser.parse_args()
-    
+    input_path = sys.argv[1]
+    out_path = sys.argv[2]
     mecab = Mecab()
-    words = mecab.re_def(args.input)
+    words = mecab.re_def(input_path)
     stime = time.time()
     c = mecab.counting(words)
-    with open(args.out, "w") as f:
+    with open(out_path, "w") as f:
         f.write(c)
 
     etime = time.time() - stime
