@@ -15,7 +15,7 @@ class Mecab:
         self.s = 0
         self.e = 200000
         self.stops = 2000000
-        self.tagger = MeCab.Tagger("-d /usr/lib/x86_64-linux-gnu/mecab/dic/mecab-ipadic-neologd")
+        self.tagger = MeCab.Tagger("-d /usr/local/lib/mecab/dic/mecab-ipadic-neologd")
 
     def re_def(self,filepass):
         with codecs.open(filepass, 'r', encoding='utf-8', errors='ignore')as f:
