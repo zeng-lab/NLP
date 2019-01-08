@@ -94,15 +94,17 @@ if __name__ == '__main__':
         score, hits, nohit = counting(words)
         if name in res_dict.keys():
             val = (res_dict[name][0] + score) / 2
-            score = (res_dict[name][1] + hits/(hits + nohit)*100 ) / 2
-            score =[val,score]
+            score = (res_dict[name][2] + (hits/(hits + nohit)*100) ) / 2
+            word = res_dict[name][1] + hits + nohit
+            score =[ val , word , score ]
             res_dict.update({name:score})
         else:
-            score = [score,hits/(hits + nohit)*100]
+            score = [score, hits+nohit ,hits/(hits + nohit)*100]
             res_dict.update({name:score})
     lines = ""
-    for key,value in res_dict.items():
-        lines += "{0}：{1} ヒット率：{2}".format(key,round(value[0],4),round(value[1],2))
+    for key, value in sorted(res_dict.items(), key=lambda x: x[1]): #スコアを昇順に
+    #for key,value in res_dict.items():
+        lines += "{0}：{1}：ヒット数：{2}：ヒット率：{3}".format(key,round(value[0],4),value[1],round(value[2],2))
         lines += '\n'
     with open(out_f,'w')as f:
         f.write(lines)

@@ -24,7 +24,6 @@ class Mecab:
             re_half = re.compile(r'[!-~]')  # 半角記号,数字,英字
             re_full = re.compile(r'[︰-＠]')  # 全角記号
             re_full2 = re.compile(r'[、・’〜：＜＞＿｜「」｛｝【】『』〈〉“”○〔〕…――――◇]')  # 全角で取り除けなかったやつ
-            #re_full2 = re.compile(r'[、〜＿―――─―◇○]')  # くくり文字以外
             re_comma = re.compile(r'[。]')  # 読点のみ
             re_url = re.compile(r'https?://[\w/:%#\$&\?\(\)~\.=\+\-…]+')
             re_tag = re.compile(r"<[^>]*?>")    #HTMLタグ
@@ -36,7 +35,7 @@ class Mecab:
             for line in f:
                 if re_num.match(line):
                     line = mojimoji.han_to_zen(line, ascii=False)
-                if '○' in line: #○からスペースまで名前なので取り除く
+                if line.find('○',0,10) == 0: #○から名前なのでここで取り除く
                     sep = re.search(pattern,line)
                     line = line.replace(sep.group(1),"")
                 line = re_half.sub("", line)
@@ -108,14 +107,12 @@ class Mecab:
             wakati = self.owakati(all_words) #分かち書きアンド形態素解析
             for addlist in wakati:
                 addlist = re.split('[\t,]', addlist)  # 空白と","で分割
-                """
-                for stopword in sloths:  #全文からストップワードを取り除く
-                    if stopword == addlist[0]:
-                        addlist = []
-                        break
-                    #while stopword in addlist[0]:
-                    #    del addlist[0]
-                """
+                #for stopword in sloths:  #全文からストップワードを取り除く
+                #    if stopword == addlist[0]:
+                #        addlist = []
+                #        break
+                #    while stopword in addlist[0]:
+                #        del addlist[0]
                 if addlist == [] or addlist[0] == 'EOS' or addlist[0] == '' or addlist[0] == 'ー' or addlist[0] == '*':
                     pass
                 elif addlist[1] == '名詞':  #名詞のみカウント
@@ -128,7 +125,7 @@ class Mecab:
                                 addlist = []
                                 break
                         if addlist:
-                            word_list.append(addlist)  #listごとに区切るのでappendでextendだとつながる
+                            word_list.append(addlist)  #listごとに区切るのでappendで。extendだとつながる
                 else:
                     pass
             for count in word_list:
@@ -136,11 +133,8 @@ class Mecab:
                     dicts.setdefault(count[0], 1)
                 else:
                     dicts[count[0]] += 1
-            ###メモリ解放###
+            ###文字数オーバー時###
             if mem:
-                #for n, c in dicts.items():
-                #    if c < len(all_words)/10**5:
-                #        del n, c
                 if len(all_words) < self.stops:
                     del wakati, addlist, word_list
                     break
