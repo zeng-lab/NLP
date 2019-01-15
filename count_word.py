@@ -23,7 +23,7 @@ class Mecab:
             l = ""
             re_half = re.compile(r'[!-~]')  # 半角記号,数字,英字
             re_full = re.compile(r'[︰-＠]')  # 全角記号
-            re_full2 = re.compile(r'[、・’〜：＜＞＿｜「」｛｝【】『』〈〉“”○〔〕…――――◇]')  # 全角で取り除けなかったやつ
+            re_full2 = re.compile(r'[、・’〜：＜＞＿｜「」｛｝【】『』〈〉“”◯○〔〕…――――◇]')  # 全角で取り除けなかったやつ
             re_comma = re.compile(r'[。]')  # 読点のみ
             re_url = re.compile(r'https?://[\w/:%#\$&\?\(\)~\.=\+\-…]+')
             re_tag = re.compile(r"<[^>]*?>")    #HTMLタグ
@@ -60,8 +60,6 @@ class Mecab:
         slothl_file = urllib.request.urlopen(sloth)
         soup = BeautifulSoup(slothl_file, 'html.parser')
         soup = str(soup).split()
-        mydict = ['君','先','いわば']
-        soup.extend(mydict)
         ###sloth_singleword###
         sloth_1 = 'http://svn.sourceforge.jp/svnroot/slothlib/CSharp/Version1/SlothLib/NLP/Filter/StopWord/word/OneLetterJp.txt'
         slothl_file2 = urllib.request.urlopen(sloth_1)
@@ -74,17 +72,16 @@ class Mecab:
             f.write(text_dic)
         return soup
 
-    def owakati(self, all_words):
-        wakatifile = []
+    def morphologial(self, all_words):
+        wakati_data = []
         while True:
             w = all_words[self.s:self.e]
-            wakatifile.extend(self.tagger.parse(w).split("\n"))
+            wakati_data.extend(self.tagger.parse(w).split("\n"))
             if self.e > self.stops or self.e > len(all_words):
                 break
-            else:
-                self.s = self.e
-                self.e += 200000
-        return wakatifile
+            self.s = self.e
+            self.e += 200000
+        return wakati_data
 
     def counting(self,all_words):
         dicts = {}  # 単語をカウントする辞書
@@ -96,28 +93,15 @@ class Mecab:
             mem = 1
         while True:
             word_list = []
-            wakati = self.owakati(all_words) #分かち書きアンド形態素解析
+            wakati = self.morphologial(all_words) #分かち書きアンド形態素解析
             for addlist in wakati:
                 addlist = re.split('[\t,]', addlist)  # 空白と","で分割
-                #for stopword in sloths:  #全文からストップワードを取り除く
-                #    if stopword == addlist[0]:
-                #        addlist = []
-                #        break
-                #    while stopword in addlist[0]:
-                #        del addlist[0]
                 if addlist == [] or addlist[0] == 'EOS' or addlist[0] == '' or addlist[0] == 'ー' or addlist[0] == '*':
                     pass
                 elif addlist[1] == '名詞':  #名詞のみカウント
-                    #elif addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '動詞' and addlist[2] == '自立' or addlist[1] == '形容詞' and addlist[2] == '自立' or addlist[1] == '副詞' and addlist[2] == '一般':
-                    if addlist[1] == '名詞' and addlist[2] == '一般' or addlist[1] == '名詞' and addlist[2] == '固有名詞' :#and not addlist[3] == '人名':
+                    if addlist[2] == '一般' or addlist[2] == '固有名詞' :#and not addlist[3] == '人名':
                         #print(addlist)  #6番目に未然形とか連用タ接続
-                        #del addlist[:7] #発言の単語ではなくその意味だけに丸める
-                        for stopword in sloths:  # ストップワードを取り除く カウントするとこだけ処理にして処理時間削減
-                            if stopword == addlist[0]:
-                                addlist = []
-                                break
-                        if addlist:
-                            word_list.append(addlist)  #listごとに区切るのでappendで。extendだとつながる
+                        word_list.append(addlist)  #listごとに区切るのでappendで。extendだとつながる
                 else:
                     pass
             for count in word_list:
@@ -138,6 +122,9 @@ class Mecab:
                     self.e += 200000
             else:
                 break
+        for key in list(dicts): #ストップワード除去
+            if key in sloths:
+                del dicts[key]
         return dicts
 
     def plot(self,countedwords):
@@ -185,28 +172,34 @@ if __name__ == '__main__':
         with open(args.search,'r') as f:
             for l in f:
                 text += l
-        c = json.loads(text,encoding='utf-8')
+        count_dic = json.loads(text,encoding='utf-8')
+        delword = input("削除したい単語をスペース区切りで(skip:0)：")
+        if delword == '0':
+            pass
+        else:
+            delword = delword.split(' ')
+            print(delword)
+            for word in delword:
+                del count_dic[word]
     else:
         words = mecab.re_def(args.input)
         stime = time.time()
-        c = mecab.counting(words)
+        count_dic = mecab.counting(words)
         etime = time.time() - stime
         print("解析処理時間",etime)
-        if args.out:
-            with open(args.out, "w") as f:
-                text = json.dumps(c,ensure_ascii=False, indent=2 ) #Falseで文字化け解消
-                f.write(text)
-                #for key,value in c.items():
-                #    f.write(f'{key} {value}\n')
+    if args.out:
+        with open(args.out, "w") as f:
+            text = json.dumps(count_dic,ensure_ascii=False, indent=2 ) #Falseで文字化け解消
+            f.write(text)
     s = input("検索ワードorPlot(1)：")
     if s == "1":
-        mecab.plot(c)
+        mecab.plot(count_dic)
     else:
-        s_word,count = mecab.Search(c,s)
+        s_word,count = mecab.Search(count_dic,s)
         print(count)
         while True:
             print(s_word)
             s = input("検索ワード or end(push 0)：")
-            s_word = mecab.Search(c,s)
+            s_word = mecab.Search(count_dic,s)
             if s == "0":
                 break
